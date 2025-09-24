@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-	"build-frontend": "tsc -b && vite build",
+    "build-frontend": "tsc -b && vite build",
     "build-server": "tsc -p ./serverSrc/tsconfig.json",
     "start-server": "node ./serverDist/server.js",
     "lint": "eslint .",
@@ -15,6 +15,7 @@
     "@aws-sdk/client-dynamodb": "^3.895.0",
     "@aws-sdk/lib-dynamodb": "^3.895.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
