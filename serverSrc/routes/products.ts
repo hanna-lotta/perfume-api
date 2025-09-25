@@ -1,6 +1,5 @@
 import express from 'express';
 import type { Request, Response, Router } from 'express';
-import * as z from "zod"
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import db from '../data/dynamodb.js';
