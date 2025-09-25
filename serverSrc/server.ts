@@ -1,8 +1,8 @@
-import 'dotenv/config'
+import 'dotenv/config' // Läser din .env-fil och gör variablerna tillgängliga i process.env
 import express from 'express'
 import type { Express, RequestHandler } from 'express'
 import cors from 'cors'
-import productRouter from './data/routes/products.js'
+import productRouter from './routes/products.js'
 
 const port = Number(process.env.PORT)
 const app: Express = express()
