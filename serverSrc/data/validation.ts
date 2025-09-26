@@ -27,4 +27,4 @@ function isCartItem(item: CartItem | undefined): item is CartItem {
 	amountInStock: z.number().gte(0)
 })
 
-export { CartSchema, isCartItem}
+export { isCartItem}
