@@ -10,7 +10,7 @@ const port = Number(process.env.PORT)
 const app: Express = express()
 
 const logger: RequestHandler = (req, res, next) => {
-  console.log(`${req.method} ${req.url} ${req.body}`)
+  console.log(`${req.method} ${req.url} ${JSON.stringify(req.query)}`)
   next()
 }
 
