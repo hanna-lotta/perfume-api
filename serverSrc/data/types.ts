@@ -5,13 +5,14 @@ export type MovieIdParam = {
 };
 
 export interface Product {
-	productId: string,
-	pk: 'product',
+	
+	Pk: 'product',
+	Sk: `p#${string}`,
 	name: string,
 	price: number,
 	img: string,
-	amountinstock: number
-} 
+	amountInStock: number
+}
 
 export interface ErrorMessage {
 	error: string
