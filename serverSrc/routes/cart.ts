@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
         res.status(200).json(validCartItems);
         
     } catch (error) {
-        console.error('Error med att hämta:', error);
+        
         res.status(500).json({ error: 'Kunde inte fetcha cart items' });
     }
 });
@@ -55,7 +55,6 @@ router.get('/user/:userId', async (req, res) => {
         res.send(filtered);
 
     } catch(error) {
-        console.log(`/cart/user/${userId} - parse error: `, (error as Error).message);
         res.sendStatus(500);
     }
 });
