@@ -1,6 +1,6 @@
 import express from 'express';
 import type { Request, Response, Router } from 'express';
-import { PutCommand, DeleteCommand, DynamoDBDocumentClient, } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, DeleteCommand, GetCommand, DynamoDBDocumentClient, } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb";
 import * as z from "zod"
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -79,6 +79,24 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch products" });
   }
 });
+
+router.get('/:productId', async (req, res) => {
+	const productId: string = req.params.productId
+	let getCommand = new GetCommand({
+		TableName: myTable,
+		Key: {
+			Pk: 'product',
+			Sk: `p#${productId}`
+		}
+	})
+	const result: GetResult = await db.send(getCommand)
+	const item: Product | undefined | ErrorMessage = result.Item
+	if (item) {
+		res.send(item)
+	} else {
+		res.status(404).send({ error: 'Product not found'})
+	}
+})
 
 
 
