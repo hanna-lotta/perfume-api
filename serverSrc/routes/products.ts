@@ -3,9 +3,7 @@ import type { Request, Response, Router } from 'express';
 import { PutCommand, DeleteCommand, DynamoDBDocumentClient, } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb";
 import * as z from "zod"
-import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import type { Product, ErrorMessage, GetResult } from '../data/types.js';
