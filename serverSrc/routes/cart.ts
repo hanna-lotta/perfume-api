@@ -27,10 +27,10 @@ router.get('/', async (req, res) => {
 		return
 	}
 
-	const items: (CartItem | undefined) = parseResult.data
-	const filtered: CartItem = items.filter(isCartItem)
+	// const items: (CartItem | undefined) = parseResult.data
+	// const filtered: CartItem = items.filter(isCartItem)
 	
-	res.send(filtered)
+	// res.send(filtered)
 })
 
 
