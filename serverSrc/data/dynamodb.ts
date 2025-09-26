@@ -12,7 +12,7 @@ const client: DynamoDBClient = new DynamoDBClient({
 	},
 });
 const db: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client);
-const myTable: string = 'perfume'
+const myTable: string = 'REST_API'
 
 export default db
 export { myTable }
