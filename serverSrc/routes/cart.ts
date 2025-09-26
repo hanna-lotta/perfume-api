@@ -33,4 +33,31 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    const result = await db.send(new QueryCommand({
+        TableName: myTable,
+        KeyConditionExpression: 'Pk = :pk',
+        ExpressionAttributeValues: {
+            ':pk': 'cart'
+        }
+    }));
+
+    try {
+        
+        const userItems = result.Items?.filter(item => 
+            item.Sk && item.Sk.includes(`#user#${userId}`)
+        ) || [];
+        
+        const filtered: CartItem[] = userItems.filter((item: any): item is CartItem => isCartItem(item));
+        
+        res.send(filtered);
+
+    } catch(error) {
+        console.log(`/cart/user/${userId} - parse error: `, (error as Error).message);
+        res.sendStatus(500);
+    }
+});
+
 export default router;
