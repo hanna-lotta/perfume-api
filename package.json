@@ -8,6 +8,7 @@
     "build-frontend": "tsc -b && vite build",
     "build-server": "tsc -p ./serverSrc/tsconfig.json",
     "start-server": "node ./serverDist/server.js",
+    "build-and-start": "npm run build-frontend && npm run build-server && npm run start-server",
     "lint": "eslint .",
     "preview": "vite preview"
   },
