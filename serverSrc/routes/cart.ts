@@ -28,8 +28,34 @@ router.get('/', async (req, res) => {
         res.status(200).json(validCartItems);
         
     } catch (error) {
-        console.error('Error med att hämta:', error);
+        
         res.status(500).json({ error: 'Kunde inte fetcha cart items' });
+    }
+});
+
+router.get('/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    const result = await db.send(new QueryCommand({
+        TableName: myTable,
+        KeyConditionExpression: 'Pk = :pk',
+        ExpressionAttributeValues: {
+            ':pk': 'cart'
+        }
+    }));
+
+    try {
+        
+        const userItems = result.Items?.filter(item => 
+            item.Sk && item.Sk.includes(`#user#${userId}`)
+        ) || [];
+        
+        const filtered: CartItem[] = userItems.filter((item: any): item is CartItem => isCartItem(item));
+        
+        res.send(filtered);
+
+    } catch(error) {
+        res.sendStatus(500);
     }
 });
 
