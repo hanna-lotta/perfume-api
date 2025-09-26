@@ -1,4 +1,5 @@
 import * as z from "zod"
+import type { CartItem, ErrorMessage } from './types.js'
 
 
 const CartSchema = z.object({
