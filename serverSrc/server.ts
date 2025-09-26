@@ -1,33 +1,35 @@
-import 'dotenv/config'
+import 'dotenv/config' 
 import express, { type Express, type RequestHandler } from 'express'
 import cors from 'cors'
-import userRouter from './data/users.js' // use .js because ESM/NodeNext
+import usersRouter from './routes/users.js'
 
-const port = Number(process.env.PORT) || 3000
+const port = Number(process.env.PORT ?? 3000)
 const app: Express = express()
 
 const logger: RequestHandler = (req, _res, next) => {
-  console.log(`${req.method} ${req.url} ${JSON.stringify(req.body)}`)
+  console.log(`${req.method} ${req.url} ${JSON.stringify(req.query)}`)
   next()
 }
 
+app.use(cors())
 app.use(express.json())
 app.use(logger)
-app.use(cors())
+app.use(express.static('./dist/'))
 
-// root
-app.get('/', (_req, res) => {
-  res.send('API is running !!!')
+// Routes
+app.use('/api/users', usersRouter)
+
+// check endpoint
+app.get('/check', (_req, res) => res.status(200).send('ok'))
+
+/*
+// error handler (optional)
+app.use((err: unknown, _req, res, _next) => {
+  console.error(err)
+  res.status(500).json({ error: 'Internal server error' })
 })
-
-// routers
-app.use('/api/users', userRouter)
-
-// 404 fallback
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Not found' })
-})
+*/
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`)
+  console.log(`Server is running on port ${port}`)
 })
