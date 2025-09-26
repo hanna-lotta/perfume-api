@@ -12,25 +12,23 @@ router.get('/', async (req, res) => {
     try {
         console.log(myTable);
         
-        const result = await db.send(new QueryCommand({
+        const command = new QueryCommand({
             TableName: myTable,
             KeyConditionExpression: 'Pk = :pk',
             ExpressionAttributeValues: {
                 ':pk': 'cart'
             }
-        }));
+        });
 
-        console.log(`Hitta ${result.Items?.length || 0} items i DynamoDB`);
+        const data = await db.send(command);
 
-        // filterera/validera med isCartItem
-        const validCartItems: CartItem[] = result.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
-        
-        console.log(`filtrerad ${result.Items?.length || 0} items → ${validCartItems.length} valid cart items`);
-        
-        res.json(validCartItems);
+        // Filtrera och validera med isCartItem
+        const validCartItems: CartItem[] = data.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
+
+        res.status(200).json(validCartItems);
         
     } catch (error) {
-        console.error('Error med att hämta items:', error);
+        console.error('Error med att hämta:', error);
         res.status(500).json({ error: 'Kunde inte fetcha cart items' });
     }
 });
