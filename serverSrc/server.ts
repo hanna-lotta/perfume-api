@@ -19,7 +19,6 @@ app.use(cors())
 app.use(express.static('./dist/'))
 app.use('/api/products', productRouter)
 
-app.use('/cart', cartRouter)
 
 
 app.listen(port, () => {

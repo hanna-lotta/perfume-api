@@ -4,12 +4,13 @@ import { GetCommand, ScanCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dy
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import type { Product, ErrorMessage } from '../data/types.js';
-import {CartSchema} from "../data/validation.js"
+import type { CartItem, Product, ErrorMessage } from '../data/types.js';
+import {CartSchema, isCartItem} from "../data/validation.js"
 
-const cartRouter: Router = express.Router();
 
-cartRouter.get('/', async (req, res) => {
+const router: Router = express.Router();
+
+router.get('/', async (req, res) => {
 	const result = await db.send(new ScanCommand({
 		TableName: myTable
 	}))
@@ -27,7 +28,7 @@ cartRouter.get('/', async (req, res) => {
 	}
 
 	const items: (CartItem | undefined) = parseResult.data
-	const filtered: CartItem = items.filter(cart)
+	const filtered: CartItem = items.filter(isCartItem)
 	
 	res.send(filtered)
 })
