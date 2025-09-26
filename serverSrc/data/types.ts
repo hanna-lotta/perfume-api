@@ -15,4 +15,8 @@ export interface Product {
 
 export interface ErrorMessage {
 	error: string
+
+export interface CartItem {
+	
+}
 }

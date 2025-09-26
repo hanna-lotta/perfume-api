@@ -3,6 +3,7 @@ import express from 'express'
 import type { Express, RequestHandler } from 'express'
 import cors from 'cors'
 import productRouter from './routes/products.js'
+import cartRouter from './routes/cart.js'
 
 const port = Number(process.env.PORT)
 const app: Express = express()
@@ -18,6 +19,7 @@ app.use(cors())
 app.use(express.static('./dist/'))
 app.use('/api/products', productRouter)
 
+app.use('/cart', cartRouter)
 
 
 app.listen(port, () => {
