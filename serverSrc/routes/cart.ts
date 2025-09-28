@@ -58,14 +58,17 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
         res.sendStatus(500);
     }
 });
+interface CartIdParams {
+    id: string  
+}
 
 interface CartParams {
     userId: string,
     amount: number,
-    productId: string
+    
 }
 
-router.put('/:id', async (req: Request, res: Response ) => {
+router.put('/:id', async (req: Request<CartIdParams, void, CartParams> ,res: Response<void> ) => {
 
 })
 
