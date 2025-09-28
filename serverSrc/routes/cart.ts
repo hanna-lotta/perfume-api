@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response, Request } from 'express';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
@@ -8,7 +8,7 @@ import type { CartItem } from '../data/types.js';
 const router = Router();
 
 // GET - Hämta alla cart objekt
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
     try {
         console.log(myTable);
         
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
 
     const result = await db.send(new QueryCommand({
@@ -58,5 +58,15 @@ router.get('/user/:userId', async (req, res) => {
         res.sendStatus(500);
     }
 });
+
+interface CartParams {
+    userId: string,
+    amount: number,
+    productId: string
+}
+
+router.put('/:id', async (req: Request, res: Response ) => {
+
+})
 
 export default router;
