@@ -1,5 +1,5 @@
 import express, { type Request, type Response, type Router } from 'express'
-import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb'
+import { QueryCommand, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema } from '../data/validation.js'
 
@@ -60,6 +60,31 @@ router.post('/', async (req: Request, res: Response) => {
   } catch (err: unknown) {
     console.error(err)
     res.status(500).json({ error: 'Failed to create user' })
+  }
+})
+
+// GET /api/users/:id -> get one user by id
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id
+
+    const result = await db.send(
+      new GetCommand({
+        TableName: myTable,
+        Key: { Pk: 'user', Sk: `u#${id}` },
+      })
+    )
+
+    const item = result.Item as Record<string, unknown> | undefined
+    if (!item) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const name = String(item['name'] ?? '')
+    return res.status(200).json({ id, name })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
 
