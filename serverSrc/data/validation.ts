@@ -2,7 +2,7 @@ import * as z from "zod"
 import type { CartItem, ErrorMessage } from './types.js'
 
 
-const CartSchema = z.object({
+export const CartSchema = z.object({
  
   userId: z.string().min(1).max(50),
   productId: z.string().regex(/^p\d+$/), 
