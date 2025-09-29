@@ -32,7 +32,7 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Kunde inte fetcha cart items' });
     }
 });
-
+//Hämta alla car items för en spec user
 router.get('/user/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -69,9 +69,9 @@ interface CartParams {
     
 }
 
-// router.put('/:productId/user/:userId', async (req, res) => {
-//     try {
+router.put('/:productId/user/:userId', async (req, res) => {
+    try {
       
-// });
+});
 
 export default router;
