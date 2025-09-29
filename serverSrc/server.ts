@@ -6,6 +6,7 @@ import productRouter from './routes/products.js'
 import cartRouter from './routes/cart.js'
 import usersRouter from './routes/user.js'
 
+// ✅ default to 1444 if .env is missing
 const port = Number(process.env.PORT)
 const app: Express = express()
 

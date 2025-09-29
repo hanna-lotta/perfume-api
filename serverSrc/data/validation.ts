@@ -1,16 +1,13 @@
 import * as z from "zod"
 import type { CartItem, ErrorMessage } from './types.js'
 
-
 const CartSchema = z.object({
- 
   userId: z.string().min(1).max(50),
   productId: z.string().regex(/^p\d+$/), 
   amount: z.number().int().min(1).max(10),
 })
 
 function isCartItem(item: CartItem | undefined): item is CartItem {
-
 	try {
 		let result = CartSchema.parse(item)
 		return true
@@ -18,7 +15,6 @@ function isCartItem(item: CartItem | undefined): item is CartItem {
 		return false
 	}
 }
-
 
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
@@ -60,4 +56,16 @@ export const ProductSchema = z.object({
 	amountInStock: z.number().int().gte(0)
 })
 
-export { isCartItem}
+const NewCartSchema = z.object({
+  userId: z.string().min(5).max(8),
+  productId: z.string().regex(/^p\d+$/), 
+  amount: z.number().int().min(1).max(10),
+})
+
+export const userPostSchema = z.object ({
+	name: z.string().min(1).max(50)
+})
+
+export { CartSchema, isCartItem, NewCartSchema }
+
+

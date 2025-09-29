@@ -8,9 +8,76 @@ import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import type { Product, ErrorMessage, GetResult } from '../data/types.js';
 import { productsPostSchema } from '../data/validation.js';
-
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 const router: Router = express.Router();
+
+
+
+
+router.put('/:productId', async (req: Request, res: Response<Product | ErrorMessage>) => {
+  // Validate full body using your existing schema
+  const validation = productsPostSchema.safeParse(req.body);
+  if (!validation.success) {
+    res.status(400).send({ error: 'Invalid request body' }); // Bad request
+    return;
+  }
+
+  const productId: string = req.params.productId;
+  if (!productId) {
+    res.status(400).send({ error: 'productId is required' }); // Bad request
+    return;
+  }
+
+  const { name, price, img, amountInStock } = validation.data;
+
+  try {
+    const update = new UpdateCommand({
+      TableName: myTable,
+      Key: { Pk: 'product', Sk: `p#${productId}` },
+      // Prevent creating a new item if it doesn't exist
+      ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
+      UpdateExpression: 'SET #n = :name, price = :price, img = :img, amountInStock = :stock',
+      ExpressionAttributeNames: {
+        '#n': 'name', // "name" can be a reserved word
+      },
+      ExpressionAttributeValues: {
+        ':name': name,
+        ':price': price,
+        ':img': img,
+        ':stock': amountInStock,
+      },
+      ReturnValues: 'ALL_NEW',
+    });
+
+    const result = await db.send(update);
+
+    // DynamoDB returns Attributes with the updated item when ReturnValues = 'ALL_NEW'
+    const updated = result.Attributes as Product | undefined;
+
+    if (!updated) {
+      // Shouldn't normally happen with ALL_NEW, but just in case
+      res.status(500).send({ error: 'Failed to update product' });
+      return;
+    }
+
+    res.status(200).send(updated); // OK
+  } catch (err: any) {
+    if (err?.name === 'ConditionalCheckFailedException') {
+      res.status(404).send({ error: 'Product not found' }); // Not found
+      return;
+    }
+    console.error(err);
+    res.status(500).send({ error: 'Failed to update product' }); // Server error
+  }
+});
+
+
+
+
+
+
+
 
 
 
