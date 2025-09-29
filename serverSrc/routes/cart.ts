@@ -76,6 +76,7 @@ router.put('/:productId/user/:userId', async (req, res) => {
         const userId = req.params.userId
         const amount = req.body.amount
 
+        
     }
 })
 
