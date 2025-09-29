@@ -1,9 +1,9 @@
 import { Router, Response, Request } from 'express';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem } from '../data/validation.js';
-import type { CartItem } from '../data/types.js';
+import { isCartItem, CartSchema } from '../data/validation.js';
+import type { CartItem, GetResult } from '../data/types.js';
 
 const router = Router();
 
@@ -33,19 +33,18 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/user/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-
-    const result = await db.send(new QueryCommand({
-        TableName: myTable,
-        KeyConditionExpression: 'Pk = :pk',
-        ExpressionAttributeValues: {
-            ':pk': 'cart'
-        }
-    }));
-
+router.get('/user/:userId', async (req, res) => {
     try {
-        
+        const userId = req.params.userId;
+
+        const result = await db.send(new QueryCommand({
+            TableName: myTable,
+            KeyConditionExpression: 'Pk = :pk',
+            ExpressionAttributeValues: {
+                ':pk': 'cart'
+            }
+        }));
+
         const userItems = result.Items?.filter(item => 
             item.Sk && item.Sk.includes(`#user#${userId}`)
         ) || [];
@@ -58,6 +57,8 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
         res.sendStatus(500);
     }
 });
+
+
 interface CartIdParams {
     id: string  
 }
@@ -68,8 +69,9 @@ interface CartParams {
     
 }
 
-router.put('/:id', async (req: Request<CartIdParams, void, CartParams> ,res: Response<void> ) => {
-
-})
+// router.put('/:productId/user/:userId', async (req, res) => {
+//     try {
+      
+// });
 
 export default router;
