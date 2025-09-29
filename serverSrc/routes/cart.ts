@@ -32,7 +32,7 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Kunde inte fetcha cart items' });
     }
 });
-//Hämta alla car items för en spec user
+//Hämta alla cart items för en spec user
 router.get('/user/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -58,6 +58,7 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
+//uppdatera amount i cart
 router.put('/:productId/user/:userId', async (req, res) => {
     try {
         const productId = req.params.productId;
@@ -75,7 +76,7 @@ router.put('/:productId/user/:userId', async (req, res) => {
             return res.status(400).json(errorResponse);
         }
 
-        const Pk = "cart";
+        const Pk = 'cart';
         const Sk = `product#${productId}#user#${userId}`;
 
         const result = await db.send(new UpdateCommand({
@@ -98,8 +99,7 @@ router.put('/:productId/user/:userId', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
-    }      
-        
+    }           
 })
 
 export default router;
