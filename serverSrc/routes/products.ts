@@ -92,9 +92,9 @@ router.get('/:productId', async (req, res) => {
 	const result: GetResult = await db.send(getCommand)
 	const item: Product | undefined | ErrorMessage = result.Item
 	if (item) {
-		res.send(item)
+		res.status(200).send(item) // OK
 	} else {
-		res.status(404).send({ error: 'Product not found'})
+		res.status(404).send({ error: 'Product not found'}) // Not found, ingen produkt med deet IDt
 	}
 })
 
