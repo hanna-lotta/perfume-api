@@ -70,8 +70,13 @@ interface CartParams {
 }
 
 router.put('/:productId/user/:userId', async (req, res) => {
+
     try {
-      
-});
+        const productId = req.params.productId
+        const userId = req.params.userId
+        const amount = req.body.amount
+
+    }
+})
 
 export default router;
