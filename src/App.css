@@ -10,20 +10,45 @@
 	grid-template-columns: repeat(4, 1fr);
 	gap: 1rem;
 	margin: 2rem 0;
-	
 }
 
 .product-card {
 	background-color: rgb(249, 242, 198);
 	border: 2px solid #ccc;
-	padding: 1rem;
-	border-radius: 8px;
+	border-radius: 4px;
 	text-align: center;
 	transition: transform 0.2s;
 	cursor: pointer;
-	
+	font-weight: bold;
 
 	&:hover {
 		transform: scale(1.025);
 	}
+	
+	img {
+		width: 100%;
+		height: 200px;
+		object-fit: cover;
+		margin-bottom: 1rem;
+	}
 }
+
+/* Responsiv för olika skärmstorlekar */
+@media (max-width: 992px) {
+	.products-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.products-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.products-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
