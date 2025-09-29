@@ -19,6 +19,8 @@ export interface ErrorMessage {
 }
 
 export interface CartItem {
+	Pk: string,
+	Sk: string,
 	userId: string,
 	productId: string, 
 	amount: number

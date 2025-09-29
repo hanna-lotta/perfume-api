@@ -2,10 +2,32 @@ import { Router } from 'express';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem } from '../data/validation.js';
+import { isCartItem, CartSchema } from '../data/validation.js';
 import type { CartItem } from '../data/types.js';
+import { any } from 'zod';
 
 const router = Router();
+
+router.post('/', async (req, res) => {
+        const validation = CartSchema.safeParse((req.body));
+        if (!validation.success)
+            return res.status(400).json({ error: "Invalid cart item" });
+        
+        const { userId, productId, amount } = validation.data;
+
+        const newCartItem: CartItem = {
+            Pk: "cart",
+            Sk: `product#${productId}#user#${userId}`,
+            userId, 
+            productId,
+            amount
+        };
+
+    try {
+
+    }
+})
+
 
 // GET - Hämta alla cart objekt
 router.get('/', async (req, res) => {
