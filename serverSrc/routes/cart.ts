@@ -2,7 +2,7 @@ import { Router, Response, Request } from 'express';
 import { QueryCommand, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem, CartSchema } from '../data/validation.js';
+import { isCartItem, NewCartSchema } from '../data/validation.js';
 import type { CartItem, GetResult } from '../data/types.js';
 
 const router = Router();
@@ -59,25 +59,40 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 
-interface CartIdParams {
-    id: string  
-}
+// interface CartIdParams {
+//     id: string  
+// }
 
-interface CartParams {
-    userId: string,
-    amount: number,
+// interface CartParams {
+//     userId: string,
+//     amount: number,
     
-}
+// }
 
 router.put('/:productId/user/:userId', async (req, res) => {
-
     try {
-        const productId = req.params.productId
-        const userId = req.params.userId
-        const amount = req.body.amount
+        const productId = req.params.productId;
+        const userId = req.params.userId;
+        const amount = req.body.amount;
 
+        const cartValidation = NewCartSchema.safeParse({
+            userId: userId,
+            productId: productId,
+            amount: amount
+        });
+
+        if (!cartValidation.success) {
+            return res.status(400).json({ 
+                error: 'Ogiltig data', 
+                details: cartValidation.error 
+            });
+        }
+
+        const Pk = "cart";
+        const Sk = `product#${productId}#user#${userId}`;
+
+       
         
-    }
 })
 
 export default router;
