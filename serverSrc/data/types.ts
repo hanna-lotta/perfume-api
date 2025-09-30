@@ -26,3 +26,15 @@ export interface CartItem {
 	amount: number
 
 }
+
+export interface User {
+  Pk: 'user'
+  Sk: `u#${string}`
+  name: string
+}
+
+export interface Cart {
+  Pk: 'cart'
+  Sk: `product#${string}#user#${string}`
+  amount: number
+}
