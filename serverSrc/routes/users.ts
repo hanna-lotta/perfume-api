@@ -1,7 +1,11 @@
+import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
-import { QueryCommand, PutCommand, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
+import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema } from '../data/validation.js'
+import { json } from 'zod'
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import type { Product, ErrorMessage, GetResult } from '../data/types.js';
 
 const router: Router = express.Router()
 
@@ -128,5 +132,32 @@ router.put('/:id', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update user' })
   }
 })
+
+// DELETE - Ta bort användare 
+router.delete('/:id', async (req, res) => {
+   const userId = req.params.id;
+
+  try {
+    await db.send(new DeleteCommand({
+      TableName: myTable, 
+      Key: { Pk: `user#${userId}`,
+             Sk: `meta`
+      },
+      ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
+
+      }));
+
+   res.status(200).json({ message: `User ${userId} deleted successfully` });
+
+} catch (error: any) { 
+    console.error(error);
+
+    if (error.name === 'ConditionalCheckFailedException') {
+      return res.status(404).json({ error: `User ${userId} not found` });
+    }
+
+    res.status(500).json({ error: `Could not delete user ${userId}` });
+}
+});
 
 export default router

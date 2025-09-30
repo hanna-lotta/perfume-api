@@ -4,7 +4,7 @@ import type { Express, RequestHandler } from 'express'
 import cors from 'cors'
 import productRouter from './routes/products.js'
 import cartRouter from './routes/cart.js'
-import usersRouter from './routes/user.js'
+import usersRouter from './routes/users.js'
 
 // ✅ default to 1444 if .env is missing
 const port = Number(process.env.PORT)
