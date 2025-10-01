@@ -27,30 +27,6 @@ router.get('/', async (req: Request, res: Response) =>  {
   }
 });
 
-  /*try {
-    const result = await db.send(
-      new QueryCommand({
-        TableName: myTable,
-        KeyConditionExpression: 'Pk = :pk',
-        ExpressionAttributeValues: { ':pk': 'user#${id}' },
-      })
-    )*/
-
-    // const items = (result.Items ?? []) as Array<Record<string, unknown>>
-    // const users = items.map((it) => {
-    //   const Pk = String(it['Pk'] ?? '')
-    //   const username = String(it['username'] ?? '')
-    //   return { userId: Pk.replace(/^user#/, ''), username }
-    // })
-
-//     res.status(200).send(result.Items)
-    
-//   } catch (err) {
-//     console.error(err)
-//     res.status(500).json({ error: 'Failed to fetch users' })
-//   }
-// })
-
 // GET /api/users/:id - get one user by id
 router.get('/:id', async (req: Request, res: Response) => {
   try {
