@@ -8,43 +8,6 @@ import { any } from 'zod';
 
 const router = Router();
 
-// POST - skapa nytt cart item
-router.post('/', async (req, res) => {
-
-        // Valdiera data från CartSchema (userId, productId, amount) 
-        const validation = CartSchema.safeParse((req.body));
-
-        // Om valideringen misslyckas returnera bad request (400)
-        if (!validation.success)
-            return res.status(400).json({ error: "Invalid cart item" });
-
-        // Plocka ut specifik data från validerad request
-        const { userId, productId, amount } = validation.data;
-
-         // Skapar ett nytt objekt (cart item) som ska sparas i databasen
-        const newCartItem: CartItem = {
-            Pk: "cart", // Används för att gruppera alla cart items
-            Sk: `product#${productId}#user#${userId}`, // Gör varje rad unik med kombinationen produkt o användare
-            userId, // Används för att enkelt kunna filtrera cart items med användare
-            productId, // Används för att identifiera produkten (unikt produkt id)
-            amount // Antalet produkter som är tillagt
-        };
-
-    try {
-        // Lägger till cart item i DynamoDB
-        await db.send(new PutCommand({
-            TableName: myTable,
-            Item: newCartItem
-        }));
-        // Returnera 201 när det har skapats
-        res.status(201).json(newCartItem);
-    } catch (error) {
-        console.error(error);
-        // Fångar olika fel som t.ex dålig nätevrks anslutning
-        res.status(500).json({ error: "Could not add to cart" });
-    }
-})
-
 
 // GET - Hämta alla cart objekt
 router.get('/', async (req: Request, res: Response) => {
@@ -97,8 +60,46 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
+// POST - skapa nytt cart item
+router.post('/', async (req, res) => {
+
+        // Valdiera data från CartSchema (userId, productId, amount) 
+        const validation = CartSchema.safeParse((req.body));
+
+        // Om valideringen misslyckas returnera bad request (400)
+        if (!validation.success)
+            return res.status(400).json({ error: "Invalid cart item" });
+
+        // Plocka ut specifik data från validerad request
+        const { userId, productId, amount } = validation.data;
+
+         // Skapar ett nytt objekt (cart item) som ska sparas i databasen
+        const newCartItem: CartItem = {
+            Pk: "cart", // Används för att gruppera alla cart items
+            Sk: `product#${productId}#user#${userId}`, // Gör varje rad unik med kombinationen produkt o användare
+            userId, // Används för att enkelt kunna filtrera cart items med användare
+            productId, // Används för att identifiera produkten (unikt produkt id)
+            amount // Antalet produkter som är tillagt
+        };
+
+    try {
+        // Lägger till cart item i DynamoDB
+        await db.send(new PutCommand({
+            TableName: myTable,
+            Item: newCartItem
+        }));
+        // Returnera 201 när det har skapats
+        res.status(201).json(newCartItem);
+    } catch (error) {
+        console.error(error);
+        // Fångar olika fel som t.ex dålig nätevrks anslutning
+        res.status(500).json({ error: "Could not add to cart" });
+    }
+})
+
+
 //uppdatera amount i cart
-router.put('/:productId/user/:userId', async (req, res) => {
+router.put('/:productId/user/:userId', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;
@@ -133,11 +134,12 @@ router.put('/:productId/user/:userId', async (req, res) => {
             return res.status(404).json(errorResponse);
         }
 
-        res.json(result.Attributes);
+        res.json(result.Attributes as CartItem);
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        const errorResponse: ErrorMessage = { error: 'Server error' };
+        res.status(500).json(errorResponse);
     }           
 })
 
