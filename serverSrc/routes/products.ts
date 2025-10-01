@@ -13,7 +13,7 @@ import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 const router: Router = express.Router();
 
 // GET - Hämtar alla produkter från DynamoDB
-router.get("/", async (req, res) => {
+router.get("/", async (req, res) => { // Req param
   try {
     // query-kommandot
     const command = new QueryCommand({
