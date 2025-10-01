@@ -77,8 +77,8 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
 // POST - skapa nytt cart item
 router.post('/', async (req, res) => {
 
-        // Valdiera data från CartSchema (userId, productId, amount) 
-        const validation = CartSchema.safeParse((req.body));
+        // Valdiera data från NewCartSchema (userId, productId, amount) 
+        const validation = NewCartSchema.safeParse((req.body));
 
         // Om valideringen misslyckas returnera bad request (400)
         if (!validation.success)
@@ -110,6 +110,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: "Could not add to cart" });
     }
 })
+
 interface CartUpdateParams {
 	productId: string;
 	userId: string;
