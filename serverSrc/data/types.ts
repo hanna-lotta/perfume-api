@@ -19,12 +19,11 @@ export interface ErrorMessage {
 }
 
 export interface CartItem {
-	Pk: string,
+	Pk: 'cart',
 	Sk: string,
 	userId: string,
 	productId: string, 
 	amount: number
-
 }
 
 export interface User {

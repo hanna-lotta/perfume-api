@@ -13,6 +13,79 @@ import { ProductIdParam } from '../data/types.js';
 
 const router: Router = express.Router();
 
+// GET - Hämtar alla produkter från DynamoDB
+router.get("/", async (req, res) => { // Req param
+  try {
+    // query-kommandot
+    const command = new QueryCommand({
+      TableName: myTable, // Tabellen i DynamoDB
+      KeyConditionExpression: "Pk = :pk", // Filtrerar partition key
+      ExpressionAttributeValues: {
+        ":pk": "product"
+      }
+    });
+
+    const data = await db.send(command); // Frågar DynamoDB efter alla items med Pk
+
+    res.status(200).json(data.Items); // Returnerar listan med produkter
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+router.get('/:productId', async (req, res) => {
+	const productId: string = req.params.productId
+	let getCommand = new GetCommand({
+		TableName: myTable,
+		Key: {
+			Pk: 'product',
+			Sk: `p#${productId}`
+		}
+	})
+	const result: GetResult = await db.send(getCommand)
+	const item: Product | undefined | ErrorMessage = result.Item
+	if (item) {
+		res.send(item)
+	} else {
+		res.status(404).send({ error: 'Product not found'})
+	}
+})
+
+
+// POST
+router.post('/:productId', async (req: Request , res: Response<Product | ErrorMessage>) => {
+	const validation = productsPostSchema.safeParse(req.body)
+	if (!validation.success) {
+		res.status(400).send({ error: 'Invalid request body'}) //Bad request
+		return
+	}
+  const productId: string = req.params.productId
+  if (!productId) {
+	res.status(400).send({error: 'productId is required'}) // Bad request
+  	return
+  }
+  const { name, price, img, amountInStock } = validation.data
+  const newItem: Product = {
+	
+	Pk: 'product',
+	Sk: `p#${productId}`,
+	name,
+	price,
+	img,
+	amountInStock
+  }
+  await db.send(new PutCommand({
+	TableName: myTable,
+	Item: newItem
+  }))
+  res.status(201).send(newItem) // created
+});
+
+
+
+// PUT
+
 
 router.put('/:productId', async (req: Request, res: Response<Product | ErrorMessage>) => {
   // Validate full body using your existing schema

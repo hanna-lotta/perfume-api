@@ -5,6 +5,8 @@ export const CartSchema = z.object({
   userId: z.string().min(1).max(50),
   productId: z.string().regex(/^p\d+$/), 
   amount: z.number().int().min(1).max(10),
+  Pk: z.literal('cart'),
+  Sk: z.string().regex(/^a-z[0-9]+$/)
 })
 
 export function isCartItem(item: CartItem | undefined): item is CartItem {
@@ -63,7 +65,7 @@ export const NewCartSchema = z.object({
 })
 
 export const userPostSchema = z.object ({
-	name: z.string().min(1).max(50)
+	username: z.string().min(1).max(50)
 })
 
 
