@@ -92,7 +92,7 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/users/:id - update user's name
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId
+    const userId = req.params.id;
 
     // validate body: must have { name }
     const parsed = userPostSchema.safeParse(req.body)
@@ -102,17 +102,19 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { username } = parsed.data
 
     // update name; fail if the user does not exist
-    const result = await db.send(
-      new UpdateCommand({
+    const result = await db.send(new UpdateCommand({
         TableName: myTable,
-        Key: { Pk: 'user#${id}', Sk: `meta` },
-        UpdateExpression: 'SET #n = :username',
+        Key: { Pk: `user`,
+             Sk: `user#${userId}`
+            },        
+      UpdateExpression: 'SET username = :username',
         // ExpressionAttributeNames: { '#n': 'username' },
         ExpressionAttributeValues: { ':username': username },
         ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
         ReturnValues: 'ALL_NEW',
-      })
-    )
+
+
+    }));
 
     const updatedUserName = String(result.Attributes?.username ?? username)
     res.status(200).json({ userId, username: updatedUserName })
@@ -131,12 +133,13 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 })
 
+
 // DELETE - Ta bort användare med id
 router.delete('/:id', async (req, res) => {
    const userId = req.params.id;
 
   try {
-    console.log('DELETE pk=',  `user#${userId}`)
+    // console.log('DELETE pk=',  `user#${userId}`)
     await db.send(new DeleteCommand({
       TableName: myTable, 
       Key: { Pk: `user`,
