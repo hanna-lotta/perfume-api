@@ -1,16 +1,15 @@
 import { Router, Response, Request } from 'express';
-import { QueryCommand, UpdateCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { isCartItem, NewCartSchema, CartSchema } from '../data/validation.js';
-import type { CartItem, GetResult, ErrorMessage } from '../data/types.js';
-import { any } from 'zod';
+import type { CartItem, ErrorMessage } from '../data/types.js';
 
 const router = Router();
 
 
 // GET - Hämta alla cart objekt
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         console.log(myTable);
         
@@ -24,18 +23,24 @@ router.get('/', async (req: Request, res: Response) => {
 
         const data = await db.send(command);
 
-        // Filtrera och validera med isCartItem
-        const validCartItems: CartItem[] = data.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
+        
+        const validCartItems = (data.Items || []) as CartItem[];
 
-        res.status(200).json(validCartItems);
+        res.status(200).send(validCartItems);
         
     } catch (error) {
         
-        res.status(500).json({ error: 'Kunde inte fetcha cart items' });
+        res.status(500).send({ error: 'Kunde inte fetcha cart items' });
     }
 });
+
+type UserIdParam = {
+	userId: string;
+}
+
+
 //Hämta alla cart items för en spec user
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         const userId = req.params.userId;
 
@@ -51,9 +56,17 @@ router.get('/user/:userId', async (req, res) => {
             item.Sk && item.Sk.includes(`#user#${userId}`)
         ) || [];
         
-        const filtered: CartItem[] = userItems.filter((item: any): item is CartItem => isCartItem(item));
+        // Validera med Zod CartSchema
+        const validatedItems: CartItem[] = [];
         
-        res.send(filtered);
+        userItems.forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validatedItems.push(validation.data);
+            }
+        });
+        
+        res.send(validatedItems);
 
     } catch(error) {
         res.sendStatus(500);
@@ -63,8 +76,8 @@ router.get('/user/:userId', async (req, res) => {
 // POST - skapa nytt cart item
 router.post('/', async (req, res) => {
 
-        // Valdiera data från CartSchema (userId, productId, amount) 
-        const validation = CartSchema.safeParse((req.body));
+        // Valdiera data från NewCartSchema (userId, productId, amount) 
+        const validation = NewCartSchema.safeParse((req.body));
 
         // Om valideringen misslyckas returnera bad request (400)
         if (!validation.success)
@@ -97,9 +110,17 @@ router.post('/', async (req, res) => {
     }
 })
 
+interface CartUpdateParams {
+	productId: string;
+	userId: string;
+}
+
+interface PutBody {
+	amount: number;
+}
 
 //uppdatera amount i cart
-router.put('/:productId/user/:userId', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
+router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {}, PutBody>, res: Response<CartItem | ErrorMessage>) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;

@@ -38,7 +38,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         Key: { Pk: 'user#${id}', Sk: `meta` },
       })
     )
-
+    
     const item = result.Item as Record<string, unknown> | undefined
     if (!item) {
       return res.status(404).json({ error: 'User not found' })
