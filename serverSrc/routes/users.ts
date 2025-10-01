@@ -42,7 +42,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const result = await db.send(
       new GetCommand({
         TableName: myTable,
-        Key: { Pk: 'user', Sk: `u#${id}` },
+        Key: { Pk: 'user#${id}', Sk: `meta` },
       })
     )
 
@@ -77,8 +77,8 @@ router.post('/', async (req: Request, res: Response) => {
       new PutCommand({
         TableName: myTable,
         Item: {
-          Pk: 'user',
-          Sk: `u#${id}`,
+          Pk: 'user#${id}',
+          Sk: `meta`,
           name,
         },
       })
