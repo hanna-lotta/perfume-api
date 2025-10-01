@@ -9,10 +9,9 @@ import { myTable } from '../data/dynamodb.js';
 import type { Product, ErrorMessage, GetResult } from '../data/types.js';
 import { productsPostSchema } from '../data/validation.js';
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { ProductIdParam } from '../data/types.js';
 
 const router: Router = express.Router();
-
-
 
 
 router.put('/:productId', async (req: Request, res: Response<Product | ErrorMessage>) => {
@@ -74,14 +73,6 @@ router.put('/:productId', async (req: Request, res: Response<Product | ErrorMess
 
 
 
-
-
-
-
-
-
-
-
 router.post('/:productId', async (req: Request , res: Response<Product | ErrorMessage>) => {
 	const validation = productsPostSchema.safeParse(req.body)
 	if (!validation.success) {
@@ -110,7 +101,7 @@ router.post('/:productId', async (req: Request , res: Response<Product | ErrorMe
   res.status(201).send(newItem) // created
 });
 
-router.delete('/:productId', async (req: Request , res: Response<Product | ErrorMessage>) => {
+router.delete('/:productId', async (req: Request<ProductIdParam> , res: Response<Product | ErrorMessage>) => {
 	const productId: string = req.params.productId
 	const deleteResult = await db.send(new DeleteCommand({
 		TableName: myTable,
@@ -147,7 +138,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get('/:productId', async (req, res) => {
+router.get('/:productId', async (req: Request<ProductIdParam>, res: Response<Product | ErrorMessage>) => {
 	const productId: string = req.params.productId
 	let getCommand = new GetCommand({
 		TableName: myTable,
