@@ -57,57 +57,6 @@ router.get('/:id', async (req: Request, res: Response) => {
 })
 
 
-
-
-
-
-
-  //   // const userId = req.params.userId
-
-  //   const result = await db.send(
-  //     new GetCommand({
-  //       TableName: myTable,
-  //     Key: { Pk: `user`,
-  //            Sk: `user#${userId}`
-  //       }
-  //     })
-  //   )
-    
-  //   const item = result.Item as Record<string, unknown> | undefined
-  //   if (!item) {
-  //     return res.status(404).json({ error: 'User not found' })
-  //   }
-
-  //   const username = String(item['username'] ?? '')
-  //   return res.status(200).json({ userId, username })
-  // } catch (err) {
-  //   console.error(err)
-  //   res.status(500).json({ error: 'Failed to fetch user' })
-  // }
-
-
-
-
-
-
-	// const userId: string = req.params.userId
-	// let getCommand = new GetCommand({
-	// 	TableName: myTable,
-	// 	Key: {
-	// 		Pk: 'user',
-	// 		Sk: `user#${id}`
-	// 	}
-	// })
-	// const result: GetResult = await db.send(getCommand)
-	// const item: user | undefined | ErrorMessage = result.Item
-	// if (item) {
-	// 	res.send(item)
-	// } else {
-	// 	res.status(404).send({ error: 'user not found'})
-	// }
-// })
-
-
 // POST /api/users - create a new user { name }
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -119,10 +68,7 @@ router.post('/', async (req: Request, res: Response) => {
     const { username } = parsed.data
 
     // create id
-    // const userId = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36))
     const id = Math.floor(Math.random()*100)
-    // Math.random
-
 
     // Save user (overwrite allowed if same key is reused)
     await db.send(
