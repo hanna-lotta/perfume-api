@@ -20,7 +20,7 @@ export interface ErrorMessage {
 
 export interface CartItem {
 	Pk: 'cart',
-	Sk: `product#${string}#user#${string}`,
+	Sk: string,
 	userId: string,
 	productId: string, 
 	amount: number

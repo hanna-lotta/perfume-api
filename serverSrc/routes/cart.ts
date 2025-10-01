@@ -39,6 +39,7 @@ type UserIdParam = {
 	userId: string;
 }
 
+
 //Hämta alla cart items för en spec user
 router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<CartItem[] | ErrorMessage>) => {
     try {
@@ -109,10 +110,17 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: "Could not add to cart" });
     }
 })
+interface CartUpdateParams {
+	productId: string;
+	userId: string;
+}
 
+interface PutBody {
+	amount: number;
+}
 
 //uppdatera amount i cart
-router.put('/:productId/user/:userId', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
+router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {}, PutBody>, res: Response<CartItem | ErrorMessage>) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;
