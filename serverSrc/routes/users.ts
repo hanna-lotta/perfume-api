@@ -27,30 +27,86 @@ router.get('/', async (req: Request, res: Response) =>  {
   }
 });
 
+
 // GET /api/users/:id - get one user by id
 router.get('/:id', async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId
+    try {
 
-    const result = await db.send(
-      new GetCommand({
-        TableName: myTable,
-        Key: { Pk: 'user#${id}', Sk: `meta` },
-      })
-    )
-    
-    const item = result.Item as Record<string, unknown> | undefined
-    if (!item) {
-      return res.status(404).json({ error: 'User not found' })
+    const userId = req.params.id
+
+    let getCommand = new GetCommand({
+      TableName: myTable,
+      Key: {
+        Pk: 'user',
+        Sk: `user#${userId}`	  	
+      }
+    })
+
+    const result = await db.send(getCommand)
+    const item = result.Item
+    if (item) {
+      res.status(200).json(item)
+    } else {
+      res.status(404).json({ error: 'user not found'})
     }
 
-    const username = String(item['username'] ?? '')
-    return res.status(200).json({ userId, username })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch user' })
+       console.error(err)
+      res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
+
+
+
+
+
+
+
+  //   // const userId = req.params.userId
+
+  //   const result = await db.send(
+  //     new GetCommand({
+  //       TableName: myTable,
+  //     Key: { Pk: `user`,
+  //            Sk: `user#${userId}`
+  //       }
+  //     })
+  //   )
+    
+  //   const item = result.Item as Record<string, unknown> | undefined
+  //   if (!item) {
+  //     return res.status(404).json({ error: 'User not found' })
+  //   }
+
+  //   const username = String(item['username'] ?? '')
+  //   return res.status(200).json({ userId, username })
+  // } catch (err) {
+  //   console.error(err)
+  //   res.status(500).json({ error: 'Failed to fetch user' })
+  // }
+
+
+
+
+
+
+	// const userId: string = req.params.userId
+	// let getCommand = new GetCommand({
+	// 	TableName: myTable,
+	// 	Key: {
+	// 		Pk: 'user',
+	// 		Sk: `user#${id}`
+	// 	}
+	// })
+	// const result: GetResult = await db.send(getCommand)
+	// const item: user | undefined | ErrorMessage = result.Item
+	// if (item) {
+	// 	res.send(item)
+	// } else {
+	// 	res.status(404).send({ error: 'user not found'})
+	// }
+// })
+
 
 // POST /api/users - create a new user { name }
 router.post('/', async (req: Request, res: Response) => {
@@ -63,7 +119,8 @@ router.post('/', async (req: Request, res: Response) => {
     const { username } = parsed.data
 
     // create id
-    const userId = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36))
+    // const userId = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36))
+    const id = Math.floor(Math.random()*100)
     // Math.random
 
 
@@ -72,14 +129,14 @@ router.post('/', async (req: Request, res: Response) => {
       new PutCommand({
         TableName: myTable,
         Item: {
-          Pk: 'user#${id}',
-          Sk: `meta`,
+          Pk: 'user',
+          Sk: `user#${id}`,
           username,
         },
       })
     )
 
-    // res.status(201).location(`/api/users/${id}`).json({ id, username })
+  res.status(201).json({ id, username })
   } catch (err: unknown) {
     console.error(err)
     res.status(500).json({ error: 'Failed to create user' })
@@ -136,8 +193,8 @@ router.delete('/:id', async (req, res) => {
     console.log('DELETE pk=',  `user#${userId}`)
     await db.send(new DeleteCommand({
       TableName: myTable, 
-      Key: { Pk: `user#${userId}`,
-             Sk: `meta`
+      Key: { Pk: `user`,
+             Sk: `user#${userId}`
       },
       ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
 
