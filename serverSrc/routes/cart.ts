@@ -10,7 +10,7 @@ const router = Router();
 
 
 // GET - Hämta alla cart objekt
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         console.log(myTable);
         
@@ -24,18 +24,23 @@ router.get('/', async (req: Request, res: Response) => {
 
         const data = await db.send(command);
 
-        // Filtrera och validera med isCartItem
-        const validCartItems: CartItem[] = data.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
+        
+        const validCartItems = (data.Items || []) as CartItem[];
 
-        res.status(200).json(validCartItems);
+        res.status(200).send(validCartItems);
         
     } catch (error) {
         
-        res.status(500).json({ error: 'Kunde inte fetcha cart items' });
+        res.status(500).send({ error: 'Kunde inte fetcha cart items' });
     }
 });
+
+type UserIdParam = {
+	userId: string;
+}
+
 //Hämta alla cart items för en spec user
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         const userId = req.params.userId;
 
@@ -51,9 +56,17 @@ router.get('/user/:userId', async (req, res) => {
             item.Sk && item.Sk.includes(`#user#${userId}`)
         ) || [];
         
-        const filtered: CartItem[] = userItems.filter((item: any): item is CartItem => isCartItem(item));
+        // Validera med Zod CartSchema
+        const validatedItems: CartItem[] = [];
         
-        res.send(filtered);
+        userItems.forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validatedItems.push(validation.data);
+            }
+        });
+        
+        res.send(validatedItems);
 
     } catch(error) {
         res.sendStatus(500);
