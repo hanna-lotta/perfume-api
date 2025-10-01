@@ -98,7 +98,7 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 //uppdatera amount i cart
-router.put('/:productId/user/:userId', async (req, res) => {
+router.put('/:productId/user/:userId', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;
@@ -133,11 +133,12 @@ router.put('/:productId/user/:userId', async (req, res) => {
             return res.status(404).json(errorResponse);
         }
 
-        res.json(result.Attributes);
+        res.json(result.Attributes as CartItem);
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        const errorResponse: ErrorMessage = { error: 'Server error' };
+        res.status(500).json(errorResponse);
     }           
 })
 
