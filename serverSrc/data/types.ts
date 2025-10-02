@@ -29,7 +29,12 @@ export interface CartItem {
 export interface User {
   Pk: 'user'
   Sk: `u#${string}`
-  username: string
+  id: string;
+  username: string;
+}
+
+export interface UserRes {
+  user: User;
 }
 
 export interface GetUsersRes {

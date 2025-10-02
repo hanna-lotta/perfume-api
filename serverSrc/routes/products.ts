@@ -39,7 +39,7 @@ router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) =>
   } catch (error) {
     console.error(error);
     // Felmeddelande
-    res.status(500).json({ error: "Failed to fetch products" });
+    res.status(500).send({ error: "Failed to fetch products" });
   }
 });
 
