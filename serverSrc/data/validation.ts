@@ -2,9 +2,9 @@ import * as z from "zod"
 
 
 export const CartSchema = z.object({
-  userId: z.string().min(1).max(50),
+  userId: z.string().min(5).max(10),
   productId: z.string().regex(/^p\d+$/), 
-  amount: z.number().int().min(1).max(10),
+  amount: z.number().int().min(1).max(20),
   Pk: z.literal('cart'),
   Sk: z.string().regex(/^product#p\d+#user#.+$/)
 })
