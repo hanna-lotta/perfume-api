@@ -3,12 +3,12 @@ import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema } from '../data/validation.js'
-import { User, ErrorMessage } from "../data/types.js"
+import { User, ErrorMessage, GetUsersRes } from "../data/types.js"
 
 const router: Router = express.Router()
 
 // GET /api/users - get all users from DynamoDB
-router.get('/', async (req: Request, res: Response<User[] | ErrorMessage>) =>  { 
+router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) =>  { 
   try {
     // query-kommandot
     const command = new QueryCommand({
@@ -29,8 +29,8 @@ router.get('/', async (req: Request, res: Response<User[] | ErrorMessage>) =>  {
       username: String(item.username),
     }));
 
-    
-    res.status(200).json(users); // Returnerar listan med produkter
+    // Returnerar listan med produkter
+    res.status(200).send({ users }); // Lägger users i ett objekt 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch user" });

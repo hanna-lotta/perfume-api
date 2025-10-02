@@ -32,6 +32,10 @@ export interface User {
   username: string
 }
 
+export interface GetUsersRes {
+	users: User[];
+}
+
 export interface Cart {
   Pk: 'cart'
   Sk: `product#${string}#user#${string}`
