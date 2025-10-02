@@ -56,6 +56,8 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             item.Sk && item.Sk.includes(`#user#${userId}`)
         ) || [];
         
+        console.log(`Found ${userItems.length} items for user ${userId}:`, userItems);
+        
         // Validera med Zod CartSchema
         const validatedItems: CartItem[] = [];
         
@@ -63,9 +65,13 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             const validation = CartSchema.safeParse(item);
             if (validation.success) {
                 validatedItems.push(validation.data);
+            } else {
+                console.log('Validation failed for item:', item);
+                console.log('Validation errors:', validation.error.issues);
             }
         });
         
+        console.log(`After validation: ${validatedItems.length} valid items`);
         res.send(validatedItems);
 
     } catch(error) {
