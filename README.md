@@ -17,28 +17,32 @@ In this API there is:
 API endpoints
 
 PRODUCTS
--GET /api/products - get all products 
--GET /api/products/:id- get spec product based by id
--POST /api/products - add new product
--PUT /api/products - change either, amount, name, price 
--DELETE /api/products -remove product
+-GET /api/products/ - all products 
+-GET /api/products/productId- get specific product 
+-POST /api/products/productId - create new product
+-PUT /api/products/productId - update product 
+-DELETE /api/products/productId -remove product
 
 CART
--GET /api/cart - get all products
--GET /api/cart/user/user1 - get specific product baser by user
--POS /api/cart/productId- add new product
--PUT /api/cart/p123/user/user1 - change either, amount, name, price 
--DELETE /api/cart -remove product
+-GET /api/cart/ - get all cart items
+-GET /api/cart/user/userId - get specific cart for sepecific user
+-POST /api/cart/ - create new cart item
+-PUT /api/cart/productId/user/userId - update cart amount 
+-DELETE /api/cart -remove in cart
 
 USER:
--GET /api/user
--GET /api/user/userId
--POST /api/user
--PUT /api/user
--DELETE /api/user
+-GET /api/users/ - all users
+-GET /api/users/userId - specific user
+-POST /api/users/ - create user  
+-PUT /api/users/userId -update username
+-DELETE /api/users/userId - remove user
 
-An example:
+An example :
 ```
 PUT http://localhost:1444/api/cart/p123/user/user1
-{"amount": 3}
+
+body: {"amount": 3}
+
+
+Created by Hanna, Julia, Photsathon, Shweta and Sara.
 
