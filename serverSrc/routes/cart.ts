@@ -23,8 +23,15 @@ router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) =
 
         const data = await db.send(command);
 
+        // Validera varje item från DynamoDB med CartSchema
+        const validCartItems: CartItem[] = [];
         
-        const validCartItems = (data.Items || []) as CartItem[];
+        (data.Items || []).forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validCartItems.push(validation.data);
+            }
+        });
 
         res.status(200).send(validCartItems);
         
