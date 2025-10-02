@@ -3,11 +3,12 @@ import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema } from '../data/validation.js'
+import { User, ErrorMessage } from "../data/types.js"
 
 const router: Router = express.Router()
 
 // GET /api/users - get all users from DynamoDB
-router.get('/', async (req: Request, res: Response) =>  { 
+router.get('/', async (req: Request, res: Response<User[] | ErrorMessage>) =>  { 
   try {
     // query-kommandot
     const command = new QueryCommand({
@@ -20,7 +21,16 @@ router.get('/', async (req: Request, res: Response) =>  {
 
     const data = await db.send(command); // Frågar DynamoDB efter alla items med Pk
 
-    res.status(200).json(data.Items); // Returnerar listan med produkter
+
+    // Mappa varje item för att kolla så att de är rätt datatyper
+    const users: User[] = (data.Items ?? []).map((item) => ({
+      Pk: item.Pk,
+      Sk: item.Sk,
+      username: String(item.username),
+    }));
+
+    
+    res.status(200).json(users); // Returnerar listan med produkter
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch user" });

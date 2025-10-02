@@ -13,9 +13,9 @@ import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 const router: Router = express.Router();
 
 // GET - Hämtar alla produkter från DynamoDB
-router.get("/", async (req, res) => { // Req param
+router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) => { 
   try {
-    // query-kommandot
+    // query command för att hämta alla items med Pk
     const command = new QueryCommand({
       TableName: myTable, // Tabellen i DynamoDB
       KeyConditionExpression: "Pk = :pk", // Filtrerar partition key
@@ -24,11 +24,23 @@ router.get("/", async (req, res) => { // Req param
       }
     });
 
-    const data = await db.send(command); // Frågar DynamoDB efter alla items med Pk
+    // Fråga DynamoDB efter alla items och får result
+    const data = await db.send(command);
 
-    res.status(200).json(data.Items); // Returnerar listan med produkter
+    // Mappa varje item för att kolla så att de är rätt datatyper
+    const products: Product[] = (data.Items ?? []).map((item) => ({
+        Pk: item.Pk,
+        Sk: item.Sk,
+        name: String(item.name),
+        price: Number(item.price),
+        img: String(item.img),
+        amountInStock: Number(item.amountInStock),
+    }))
+
+    res.status(200).json(products); // Returnerar listan med produkter
   } catch (error) {
     console.error(error);
+    // Felmeddelande
     res.status(500).json({ error: "Failed to fetch products" });
   }
 });
