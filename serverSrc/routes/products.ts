@@ -147,7 +147,7 @@ router.put('/:productId', async (req: Request, res: Response<Product | ErrorMess
       res.status(500).send({ error: 'Failed to update product' });
     }
   }
-});
+);
 
 
 router.delete('/:productId', async (req: Request<ProductIdParam> , res: Response<Product | ErrorMessage>) => {
