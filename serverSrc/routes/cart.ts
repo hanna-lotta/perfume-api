@@ -59,16 +59,12 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             }
         }));
 
-        const userItems = result.Items?.filter(item => 
-            item.Sk && item.Sk.includes(`#user#${userId}`)
-        ) || [];
-        
-        // Validera med Zod CartSchema
+        // Validera och filtrera i samma steg - helt typsäkert
         const validatedItems: CartItem[] = [];
         
-        userItems.forEach(item => {
+        (result.Items || []).forEach(item => {
             const validation = CartSchema.safeParse(item);
-            if (validation.success) {
+            if (validation.success && validation.data.Sk.includes(`#user#${userId}`)) {
                 validatedItems.push(validation.data);
             }
         });
