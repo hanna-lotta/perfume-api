@@ -137,29 +137,26 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(400).send(errorResponse);
         }
 
-        const Pk = 'cart';
-        const Sk = `product#${productId}#user#${userId}`;
+        // Skapa komplett cart item för upsert
+        const cartItem: CartItem = {
+            Pk: 'cart',
+            Sk: `product#${productId}#user#${userId}`,
+            userId: userId,
+            productId: productId,
+            amount: amount
+        };
 
-        const result = await db.send(new UpdateCommand({
+        const result = await db.send(new PutCommand({
             TableName: myTable,
-            Key: { Pk, Sk },
-            UpdateExpression: 'SET amount = :amount',
-            ExpressionAttributeValues: {
-                ':amount': amount
-            },
-            ReturnValues: 'ALL_NEW'
+            Item: cartItem,
+            ReturnValues: 'ALL_OLD'
         }));
 
-        if (!result.Attributes) {
-            const errorResponse: ErrorMessage = { error: 'Failed to update cart item' };
-            return res.status(404).send(errorResponse);
-        }
-
-        // Validera att DynamoDB returnerade data matchar CartItem-strukturen
-        const validationResult = CartSchema.safeParse(result.Attributes);
+        // PutCommand lyckas alltid, returnera det item vi skapade/uppdaterade
+        const validationResult = CartSchema.safeParse(cartItem);
         
         if (!validationResult.success) {
-            console.error('Invalid cart item structure from DynamoDB:', validationResult.error);
+            console.error('Invalid cart item structure:', validationResult.error);
             const errorResponse: ErrorMessage = { error: 'Invalid cart item data' };
             return res.status(500).send(errorResponse);
         }
