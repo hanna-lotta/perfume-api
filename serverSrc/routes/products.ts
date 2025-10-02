@@ -35,7 +35,7 @@ router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) =>
         amountInStock: Number(item.amountInStock),
     }))
 
-    res.status(200).json(products); // Returnerar listan med produkter
+    res.status(200).send(products); // Returnerar listan med produkter
   } catch (error) {
     console.error(error);
     // Felmeddelande
