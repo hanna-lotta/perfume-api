@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
 
         // Om valideringen misslyckas returnera bad request (400)
         if (!validation.success)
-            return res.status(400).json({ error: "Invalid cart item" });
+            return res.status(400).send({ error: "Invalid cart item" });
 
         // Plocka ut specifik data från validerad request
         const { userId, productId, amount } = validation.data;
@@ -102,11 +102,11 @@ router.post('/', async (req, res) => {
             Item: newCartItem
         }));
         // Returnera 201 när det har skapats
-        res.status(201).json(newCartItem);
+        res.status(201).send(newCartItem);
     } catch (error) {
         console.error(error);
         // Fångar olika fel som t.ex dålig nätevrks anslutning
-        res.status(500).json({ error: "Could not add to cart" });
+        res.status(500).send({ error: "Could not add to cart" });
     }
 })
 
@@ -134,7 +134,7 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
 
         if (!cartValidation.success) {
             const errorResponse: ErrorMessage = { error: 'Invalid data' };
-            return res.status(400).json(errorResponse);
+            return res.status(400).send(errorResponse);
         }
 
         const Pk = 'cart';
@@ -152,15 +152,15 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
 
         if (!result.Attributes) {
             const errorResponse: ErrorMessage = { error: 'Failed to update cart item' };
-            return res.status(404).json(errorResponse);
+            return res.status(404).send(errorResponse);
         }
 
-        res.json(result.Attributes as CartItem);
+        res.send(result.Attributes as CartItem);
 
     } catch (error) {
         console.error(error);
         const errorResponse: ErrorMessage = { error: 'Server error' };
-        res.status(500).json(errorResponse);
+        res.status(500).send(errorResponse);
     }           
 })
 
