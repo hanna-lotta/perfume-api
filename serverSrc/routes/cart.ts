@@ -2,7 +2,7 @@ import { Router, Response, Request } from 'express';
 import { QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem, NewCartSchema, CartSchema } from '../data/validation.js';
+import { NewCartSchema, CartSchema } from '../data/validation.js';
 import type { CartItem, ErrorMessage } from '../data/types.js';
 
 const router = Router();
@@ -23,8 +23,15 @@ router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) =
 
         const data = await db.send(command);
 
+        // Validera varje item från DynamoDB med CartSchema
+        const validCartItems: CartItem[] = [];
         
-        const validCartItems = (data.Items || []) as CartItem[];
+        (data.Items || []).forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validCartItems.push(validation.data);
+            }
+        });
 
         res.status(200).send(validCartItems);
         
@@ -52,20 +59,22 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             }
         }));
 
-        const userItems = result.Items?.filter(item => 
-            item.Sk && item.Sk.includes(`#user#${userId}`)
-        ) || [];
-        
-        // Validera med Zod CartSchema
+        // Validera och filtrera i samma steg - helt typsäkert
         const validatedItems: CartItem[] = [];
         
-        userItems.forEach(item => {
+        (result.Items || []).forEach(item => {
             const validation = CartSchema.safeParse(item);
-            if (validation.success) {
+            if (validation.success && validation.data.Sk.includes(`#user#${userId}`)) {
                 validatedItems.push(validation.data);
+            } else {
+                console.log('Validation failed for item:', item);
+                if (validation.error) {
+                    console.log('Validation errors:', validation.error.issues);
+                }
             }
         });
         
+        console.log(`After validation: ${validatedItems.length} valid items`);
         res.send(validatedItems);
 
     } catch(error) {
@@ -137,29 +146,26 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(400).send(errorResponse);
         }
 
-        const Pk = 'cart';
-        const Sk = `product#${productId}#user#${userId}`;
+        // Skapa komplett cart item för upsert
+        const cartItem: CartItem = {
+            Pk: 'cart',
+            Sk: `product#${productId}#user#${userId}`,
+            userId: userId,
+            productId: productId,
+            amount: amount
+        };
 
-        const result = await db.send(new UpdateCommand({
+        const result = await db.send(new PutCommand({
             TableName: myTable,
-            Key: { Pk, Sk },
-            UpdateExpression: 'SET amount = :amount',
-            ExpressionAttributeValues: {
-                ':amount': amount
-            },
-            ReturnValues: 'ALL_NEW'
+            Item: cartItem,
+            ReturnValues: 'ALL_OLD'
         }));
 
-        if (!result.Attributes) {
-            const errorResponse: ErrorMessage = { error: 'Failed to update cart item' };
-            return res.status(404).send(errorResponse);
-        }
-
-        // Validera att DynamoDB returnerade data matchar CartItem-strukturen
-        const validationResult = CartSchema.safeParse(result.Attributes);
+        // PutCommand lyckas alltid, returnera det item vi skapade/uppdaterade
+        const validationResult = CartSchema.safeParse(cartItem);
         
         if (!validationResult.success) {
-            console.error('Invalid cart item structure from DynamoDB:', validationResult.error);
+            console.error('Invalid cart item structure:', validationResult.error);
             const errorResponse: ErrorMessage = { error: 'Invalid cart item data' };
             return res.status(500).send(errorResponse);
         }

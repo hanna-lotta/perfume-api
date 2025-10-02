@@ -1,5 +1,5 @@
 import * as z from "zod"
-import type { CartItem } from './types.js'
+
 
 export const CartSchema = z.object({
   userId: z.string().min(1).max(50),
@@ -8,15 +8,6 @@ export const CartSchema = z.object({
   Pk: z.literal('cart'),
   Sk: z.string().regex(/^product#p\d+#user#.+$/)
 })
-
-export function isCartItem(item: CartItem | undefined): item is CartItem {
-	try {
-		let result = CartSchema.parse(item)
-		return true
-	} catch {
-		return false
-	}
-}
 
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
