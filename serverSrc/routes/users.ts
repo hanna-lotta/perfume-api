@@ -26,7 +26,6 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
     const users: User[] = (data.Items ?? []).map((item) => ({
       Pk: item.Pk,
       Sk: item.Sk,
-      id: String(item.id),
       username: String(item.username),
     }));
 
