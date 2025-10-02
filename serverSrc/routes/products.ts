@@ -57,7 +57,7 @@ router.get('/:productId', async (req: Request<ProductIdParam>, res: Response<Pro
 
 
 // POST
-router.post('/:productId', async (req: Request , res: Response<Product | ErrorMessage>) => {
+router.post('/', async (req: Request , res: Response<Product | ErrorMessage>) => {
 	const validation = productsPostSchema.safeParse(req.body)
 	if (!validation.success) {
 		res.status(400).send({ error: 'Invalid request body'}) //Bad request
