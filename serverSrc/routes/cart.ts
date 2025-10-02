@@ -155,6 +155,7 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(404).send(errorResponse);
         }
 
+        // Validera att DynamoDB returnerade data matchar CartItem-strukturen
         const validationResult = CartSchema.safeParse(result.Attributes);
         
         if (!validationResult.success) {
