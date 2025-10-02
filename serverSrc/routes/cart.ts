@@ -68,7 +68,9 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
                 validatedItems.push(validation.data);
             } else {
                 console.log('Validation failed for item:', item);
-                console.log('Validation errors:', validation.error.issues);
+                if (validation.error) {
+                    console.log('Validation errors:', validation.error.issues);
+                }
             }
         });
         
