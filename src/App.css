@@ -80,6 +80,10 @@ header {
 		margin-bottom: 1rem;
 	}
 }
+.cart-frame{
+	border: 2px solid #ccc;
+	border-radius: 4px;
+}
 
 /* Responsiv för olika skärmstorlekar */
 @media (max-width: 992px) {
