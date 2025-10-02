@@ -5,7 +5,7 @@ import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import type { Product, ErrorMessage, GetResult } from '../data/types.js';
-import { productsPostSchema } from '../data/validation.js';
+import { ProductSchema, productsPostSchema } from '../data/validation.js';
 import { ProductIdParam } from '../data/types.js';
 
 const router: Router = express.Router();
@@ -172,9 +172,14 @@ router.delete('/:productId', async (req: Request<ProductIdParam> , res: Response
 			ReturnValues: 'ALL_OLD'
 		}))
 		
-		if (deleteResult.Attributes) {
-			const deletedProduct = deleteResult.Attributes as Product;
-			res.status(200).send(deletedProduct); //OK
+		if (deleteResult.Attributes) {   //Attributes - Alla fält som begärdes - ur returnvalues 'ALL_OLD' (AWS terminologi)
+			const validation = ProductSchema.safeParse(deleteResult.Attributes)
+			if (validation.success) {
+				const deletedProduct = validation.data
+				res.status(200).send(deletedProduct); //OK
+			} else {
+				res.status(500).send({ error: 'Database validation failed' })
+			}
 		} else {
 			res.status(404).send({ error: 'Product not found'}) // Not found
 		}
