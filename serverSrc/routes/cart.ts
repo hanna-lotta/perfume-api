@@ -155,7 +155,15 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(404).send(errorResponse);
         }
 
-        res.send(result.Attributes as CartItem);
+        const validationResult = CartSchema.safeParse(result.Attributes);
+        
+        if (!validationResult.success) {
+            console.error('Invalid cart item structure from DynamoDB:', validationResult.error);
+            const errorResponse: ErrorMessage = { error: 'Invalid cart item data' };
+            return res.status(500).send(errorResponse);
+        }
+
+        res.send(validationResult.data);
 
     } catch (error) {
         console.error(error);
