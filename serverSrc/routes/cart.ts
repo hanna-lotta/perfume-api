@@ -2,7 +2,7 @@ import { Router, Response, Request } from 'express';
 import { QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem, NewCartSchema, CartSchema } from '../data/validation.js';
+import { NewCartSchema, CartSchema } from '../data/validation.js';
 import type { CartItem, ErrorMessage } from '../data/types.js';
 
 const router = Router();
@@ -23,8 +23,15 @@ router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) =
 
         const data = await db.send(command);
 
+        // Validera varje item från DynamoDB med CartSchema
+        const validCartItems: CartItem[] = [];
         
-        const validCartItems = (data.Items || []) as CartItem[];
+        (data.Items || []).forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validCartItems.push(validation.data);
+            }
+        });
 
         res.status(200).send(validCartItems);
         
@@ -52,20 +59,20 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             }
         }));
 
-        const userItems = result.Items?.filter(item => 
-            item.Sk && item.Sk.includes(`#user#${userId}`)
-        ) || [];
-        
-        // Validera med Zod CartSchema
+        // Validera och filtrera i samma steg - helt typsäkert
         const validatedItems: CartItem[] = [];
         
-        userItems.forEach(item => {
+        (result.Items || []).forEach(item => {
             const validation = CartSchema.safeParse(item);
-            if (validation.success) {
+            if (validation.success && validation.data.Sk.includes(`#user#${userId}`)) {
                 validatedItems.push(validation.data);
+            } else {
+                console.log('Validation failed for item:', item);
+                console.log('Validation errors:', validation.error.issues);
             }
         });
         
+        console.log(`After validation: ${validatedItems.length} valid items`);
         res.send(validatedItems);
 
     } catch(error) {
