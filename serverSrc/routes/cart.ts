@@ -66,9 +66,13 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             const validation = CartSchema.safeParse(item);
             if (validation.success && validation.data.Sk.includes(`#user#${userId}`)) {
                 validatedItems.push(validation.data);
+            } else {
+                console.log('Validation failed for item:', item);
+                console.log('Validation errors:', validation.error.issues);
             }
         });
         
+        console.log(`After validation: ${validatedItems.length} valid items`);
         res.send(validatedItems);
 
     } catch(error) {

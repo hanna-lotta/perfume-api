@@ -1,7 +1,7 @@
 export type GetResult = Record<string, any> | undefined
 
-export type MovieIdParam = {
-	movieId: string;
+export type ProductIdParam = {
+	productId: string;
 };
 
 export interface Product {
@@ -28,7 +28,7 @@ export interface CartItem {
 
 export interface User {
   Pk: 'user'
-  Sk: `u#${string}`
+  Sk: `user#${string}`
   name: string
 }
 
