@@ -1,5 +1,5 @@
 import * as z from "zod"
-import type { CartItem } from './types.js'
+
 
 export const CartSchema = z.object({
   userId: z.string().min(1).max(50),
