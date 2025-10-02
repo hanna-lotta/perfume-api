@@ -27,30 +27,35 @@ router.get('/', async (req: Request, res: Response) =>  {
   }
 });
 
+
 // GET /api/users/:id - get one user by id
 router.get('/:id', async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId
+    try {
 
-    const result = await db.send(
-      new GetCommand({
-        TableName: myTable,
-        Key: { Pk: 'user#${id}', Sk: `meta` },
-      })
-    )
-    
-    const item = result.Item as Record<string, unknown> | undefined
-    if (!item) {
-      return res.status(404).json({ error: 'User not found' })
+    const userId = req.params.id
+
+    let getCommand = new GetCommand({
+      TableName: myTable,
+      Key: {
+        Pk: 'user',
+        Sk: `user#${userId}`	  	
+      }
+    })
+
+    const result = await db.send(getCommand)
+    const item = result.Item
+    if (item) {
+      res.status(200).json(item)
+    } else {
+      res.status(404).json({ error: 'user not found'})
     }
 
-    const username = String(item['username'] ?? '')
-    return res.status(200).json({ userId, username })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch user' })
+       console.error(err)
+      res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
+
 
 // POST /api/users - create a new user { name }
 router.post('/', async (req: Request, res: Response) => {
@@ -63,23 +68,21 @@ router.post('/', async (req: Request, res: Response) => {
     const { username } = parsed.data
 
     // create id
-    const userId = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36))
-    // Math.random
-
+    const id = Math.floor(Math.random()*100)
 
     // Save user (overwrite allowed if same key is reused)
     await db.send(
       new PutCommand({
         TableName: myTable,
         Item: {
-          Pk: 'user#${id}',
-          Sk: `meta`,
+          Pk: 'user',
+          Sk: `user#${id}`,
           username,
         },
       })
     )
 
-    // res.status(201).location(`/api/users/${id}`).json({ id, username })
+  res.status(201).json({ id, username })
   } catch (err: unknown) {
     console.error(err)
     res.status(500).json({ error: 'Failed to create user' })
@@ -89,7 +92,7 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/users/:id - update user's name
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId
+    const userId = req.params.id;
 
     // validate body: must have { name }
     const parsed = userPostSchema.safeParse(req.body)
@@ -99,17 +102,19 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { username } = parsed.data
 
     // update name; fail if the user does not exist
-    const result = await db.send(
-      new UpdateCommand({
+    const result = await db.send(new UpdateCommand({
         TableName: myTable,
-        Key: { Pk: 'user#${id}', Sk: `meta` },
-        UpdateExpression: 'SET #n = :username',
+        Key: { Pk: `user`,
+             Sk: `user#${userId}`
+            },        
+      UpdateExpression: 'SET username = :username',
         // ExpressionAttributeNames: { '#n': 'username' },
         ExpressionAttributeValues: { ':username': username },
         ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
         ReturnValues: 'ALL_NEW',
-      })
-    )
+
+
+    }));
 
     const updatedUserName = String(result.Attributes?.username ?? username)
     res.status(200).json({ userId, username: updatedUserName })
@@ -128,16 +133,17 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 })
 
+
 // DELETE - Ta bort användare med id
 router.delete('/:id', async (req, res) => {
    const userId = req.params.id;
 
   try {
-    console.log('DELETE pk=',  `user#${userId}`)
+    // console.log('DELETE pk=',  `user#${userId}`)
     await db.send(new DeleteCommand({
       TableName: myTable, 
-      Key: { Pk: `user#${userId}`,
-             Sk: `meta`
+      Key: { Pk: `user`,
+             Sk: `user#${userId}`
       },
       ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
 
