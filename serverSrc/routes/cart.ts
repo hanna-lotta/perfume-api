@@ -2,7 +2,7 @@ import { Router, Response, Request } from 'express';
 import { QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
-import { isCartItem, NewCartSchema, CartSchema } from '../data/validation.js';
+import { NewCartSchema, CartSchema } from '../data/validation.js';
 import type { CartItem, ErrorMessage } from '../data/types.js';
 
 const router = Router();

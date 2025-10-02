@@ -9,15 +9,6 @@ export const CartSchema = z.object({
   Sk: z.string().regex(/^product#p\d+#user#.+$/)
 })
 
-export function isCartItem(item: CartItem | undefined): item is CartItem {
-	try {
-		let result = CartSchema.parse(item)
-		return true
-	} catch {
-		return false
-	}
-}
-
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
 	Sk: z.string().regex(/^p[0-9]+$/), // Sk ska vara p + nr
