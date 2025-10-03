@@ -52,7 +52,7 @@ router.get('/:userId', async (req: Request<{ userId: string }>, res: Response<Us
           Sk: `user#${userId}` }
       }));
 
-      if (!result.Item) return res.status(404).json({ error: 'User not found' });
+      if (!result.Item) return res.status(404).send({ error: 'User not found' });
 
       const validated = userSchema.safeParse(result.Item);
       if (!validated.success) {
