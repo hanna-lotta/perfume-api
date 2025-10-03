@@ -1,5 +1,5 @@
 import { Router, Response, Request } from 'express';
-import { QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { NewCartSchema, CartSchema } from '../data/validation.js';
@@ -161,16 +161,9 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             ReturnValues: 'ALL_OLD'
         }));
 
-        // PutCommand lyckas alltid, returnera det item vi skapade/uppdaterade
-        const validationResult = CartSchema.safeParse(cartItem);
-        
-        if (!validationResult.success) {
-            console.error('Invalid cart item structure:', validationResult.error);
-            const errorResponse: ErrorMessage = { error: 'Invalid cart item data' };
-            return res.status(500).send(errorResponse);
-        }
-
-        res.send(validationResult.data);
+        // TypeScript ser till att cartItem matchar CartItem interface
+        const responseItem: CartItem = cartItem;
+        res.send(responseItem);
 
     } catch (error) {
         console.error(error);

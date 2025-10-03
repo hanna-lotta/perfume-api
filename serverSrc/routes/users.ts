@@ -118,7 +118,6 @@ router.put('/:id', async (req: Request, res: Response) => {
              Sk: `user#${userId}`
             },        
       UpdateExpression: 'SET username = :username',
-        // ExpressionAttributeNames: { '#n': 'username' },
         ExpressionAttributeValues: { ':username': username },
         ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
         ReturnValues: 'ALL_NEW',
