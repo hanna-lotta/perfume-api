@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
         
     } catch (error) {
         
-        res.status(500).send({ error: 'Kunde inte fetcha cart items' });
+        res.status(500).send({ error: 'Can not fetch cart items' });
     }
 });
 
@@ -42,6 +42,12 @@ type UserIdParam = {
 router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         const userId = req.params.userId;
+        
+        // Validera userId parameter med NewCartSchema userId regler
+        const userIdValidation = NewCartSchema.shape.userId.safeParse(userId);
+        if (!userIdValidation.success) {
+            return res.status(400).send({ error: 'Invalid userId format' });
+        }
 
         const result = await db.send(new QueryCommand({
             TableName: myTable,
@@ -75,7 +81,7 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
 });
 
 // POST - skapa nytt cart item
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
 
         // Valdiera data från NewCartSchema (userId, productId, amount) 
         const validation = NewCartSchema.safeParse((req.body));
