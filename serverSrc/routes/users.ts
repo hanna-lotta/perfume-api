@@ -70,35 +70,37 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 
 // POST /api/users - create a new user { name }
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => {
   try {
     // validate body
     const parsed = userPostSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues })
+      return res.status(400).send({ error: 'Invalid body' })
     }
     const { username } = parsed.data
 
     // create id
-    const id = Math.floor(Math.random()*100)
+    const userId = Math.floor(Math.random()*100)
+
+    const newUser = {
+          Pk: 'user',
+          Sk: `user#${userId}`,
+          username,
+    }
 
     // Save user (overwrite allowed if same key is reused)
-    await db.send(
-      new PutCommand({
+    await db.send(new PutCommand({
         TableName: myTable,
-        Item: {
-          Pk: 'user',
-          Sk: `user#${id}`,
-          username,
-        },
-      })
-    )
+        Item: newUser,
+      }))
 
-  res.status(201).json({ id, username })
-  } catch (err: unknown) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
+      const validated = userSchema.parse(newUser)
+      res.status(201).send({ user: validated })
+
+    } catch (err) {
+      console.error(err)
+      res.status(500).send({ error: 'Failed to create user' })
+    }
 })
 
 // PUT /api/users/:id - update user's name
@@ -129,7 +131,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     }));
 
     const updatedUserName = String(result.Attributes?.username ?? username)
-    res.status(200).json({ userId, username: updatedUserName })
+    res.status(200).send({ userId, username: updatedUserName })
   } catch (err: unknown) {
     // if user doesn't exist - 404
     if (
@@ -138,10 +140,10 @@ router.put('/:id', async (req: Request, res: Response) => {
       'username' in err &&
       (err as { username?: string }).username === 'ConditionalCheckFailedException'
     ) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).send({ error: 'User not found' })
     }
     console.error(err)
-    res.status(500).json({ error: 'Failed to update user' })
+    res.status(500).send({ error: 'Failed to update user' })
   }
 })
 

@@ -15,7 +15,8 @@ export interface Product {
 }
 
 export interface ErrorMessage {
-	error: string
+	error: string;
+	issuess?: unknown;
 }
 
 export interface CartItem {
