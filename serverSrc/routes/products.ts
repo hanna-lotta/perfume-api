@@ -104,13 +104,22 @@ router.post('/', async (req: Request , res: Response<Product | ErrorMessage>) =>
 });
 
 // PUT
-router.put('/:productId', async (req: Request, res: Response<Product | ErrorMessage>) => {
-  // Validate full body using your existing schema
-  const validation = productsPostSchema.safeParse(req.body);
-  if (!validation.success) {
-    res.status(400).send({ error: 'Invalid request body' }); // Bad request
-    return;
-  }
+interface ProductPutBody
+{name: string,
+price: number,
+amountInStock:number,
+img:string
+}
+
+router.put(
+  '/:productId',
+  async ( req: Request<ProductIdParam,{}, ProductPutBody>,res: Response<Product | ErrorMessage>
+  ) => {
+    const bodyValidation = productsPostSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      res.status(400).send({ error: 'Invalid request body' });
+      return;
+    }
 
     const { productId } = req.params;
     if (!productId) {
@@ -118,49 +127,50 @@ router.put('/:productId', async (req: Request, res: Response<Product | ErrorMess
       return;
     }
 
-    const { name, price, img, amountInStock } = validation.data;
+    const { name, price, img, amountInStock } = bodyValidation.data;
+
+    // Build the complete, canonical DB item
+    const newItem: Product = {
+      Pk: 'product',
+      Sk: `p#${productId}`,
+      name,
+      price,
+      img,
+      amountInStock,
+    };
 
     try {
-      const cmd = new UpdateCommand({
-        TableName: myTable,
-        Key: { Pk: 'product', Sk: `p#${productId}` },
-        ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
-        UpdateExpression: 'SET #name = :name, #price = :price, #img = :img, #stock = :stock',
-        ExpressionAttributeNames: {
-          '#name': 'name',
-          '#price': 'price',
-          '#img': 'img',
-          '#stock': 'amountInStock',
-        },
-        ExpressionAttributeValues: {
-          ':name': name,
-          ':price': price,
-          ':img': img,
-          ':stock': amountInStock,
-        },
-        ReturnValues: 'ALL_NEW',
-      });
+      // Overwrite the item, but ONLY if it already exists (so PUT doesn’t create)
+      await db.send(
+        new PutCommand({
+          TableName: myTable,
+          Item: newItem,
+          ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
+        })
+      );
 
-      const result = await db.send(cmd);
-      const updated = result.Attributes as Product | undefined;
-
-      if (!updated) {
-        res.status(500).send({ error: 'Failed to update product' });
+       // Validate what we will return (protects against drift)
+      const dbValidation = ProductSchema.safeParse(newItem);
+      if (!dbValidation.success) {
+        res.status(500).send({ error: 'Database validation failed' });
         return;
       }
 
-      res.status(200).send(updated);
+      res.status(200).send(dbValidation.data);
     } catch (err: any) {
-      if (err?.name === 'ConditionalCheckFailedException' || err?.code === 'ConditionalCheckFailedException') {
+      // If the item didn't exist, the condition fails → treat as 404
+      if (
+        err?.name === 'ConditionalCheckFailedException' ||
+        err?.code === 'ConditionalCheckFailedException'
+      ) {
         res.status(404).send({ error: 'Product not found' });
         return;
       }
-      console.error('PUT /products/:productId error:', err?.name, err?.message);
+      console.error('PUT /products/:productId error:', err);
       res.status(500).send({ error: 'Failed to update product' });
     }
   }
 );
-
 
 router.delete('/:productId', async (req: Request<ProductIdParam> , res: Response<Product | ErrorMessage>) => {
 	const productId: string = req.params.productId
