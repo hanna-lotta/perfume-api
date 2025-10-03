@@ -41,32 +41,31 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 
 // GET /api/users/:id - get one user by id
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
     try {
+      const userId = req.params.id;
 
-    const userId = req.params.id
+      const result = await db.send(new GetCommand({
+        TableName: myTable,
+        Key: { 
+          Pk: 'user', 
+          Sk: `user#${userId}` }
+      }));
 
-    let getCommand = new GetCommand({
-      TableName: myTable,
-      Key: {
-        Pk: 'user',
-        Sk: `user#${userId}`	  	
+      if (!result.Item) return res.status(404).json({ error: 'User not found' });
+
+      const validated = userSchema.safeParse(result.Item);
+      if (!validated.success) {
+        return res.status(500).json({ error: 'Invalid user data in database' });
       }
-    })
 
-    const result = await db.send(getCommand)
-    const item = result.Item
-    if (item) {
-      res.status(200).json(item)
-    } else {
-      res.status(404).json({ error: 'user not found'})
+      res.status(200).json({ user: validated.data });
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to fetch user' });
     }
-
-  } catch (err) {
-       console.error(err)
-      res.status(500).json({ error: 'Failed to fetch user' })
-  }
-})
+});
 
 
 // POST /api/users - create a new user { name }
