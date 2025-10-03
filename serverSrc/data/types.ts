@@ -36,6 +36,10 @@ export interface UserIdParam {
 	userId: string;
 }
 
+export interface PutUserParam {
+	id: string;
+}
+
 export interface UserRes {
   user: User;
 }
