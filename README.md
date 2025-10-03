@@ -32,10 +32,10 @@ CART
 
 USER:
 -GET /api/users/ - all users
--GET /api/users/:userId - specific user
+-GET /api/users/:id - specific user
 -POST /api/users/ - create user  
--PUT /api/users/:userId -update username
--DELETE /api/users/:userId - remove user
+-PUT /api/users/:id -update username
+-DELETE /api/users/:id - remove user
 
 An example :
 ```
