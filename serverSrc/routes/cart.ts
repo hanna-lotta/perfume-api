@@ -8,7 +8,7 @@ import type { CartItem, ErrorMessage } from '../data/types.js';
 const router = Router();
 
 // GET - Hämta alla cart objekt
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) => {
     try {
         console.log(myTable);
         
@@ -22,10 +22,17 @@ router.get('/', async (req, res) => {
 
         const data = await db.send(command);
 
-        // Filtrera och validera med isCartItem
-        const validCartItems: CartItem[] = data.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
+        // Validera varje item från DynamoDB med CartSchema
+        const validCartItems: CartItem[] = [];
+        
+        (data.Items || []).forEach(item => {
+            const validation = CartSchema.safeParse(item);
+            if (validation.success) {
+                validCartItems.push(validation.data);
+            }
+        });
 
-        res.status(200).json(validCartItems);
+        res.status(200).send(validCartItems);
         
     } catch (error) {
         
@@ -159,16 +166,9 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             ReturnValues: 'ALL_OLD'
         }));
 
-        // PutCommand lyckas alltid, returnera det item vi skapade/uppdaterade
-        const validationResult = CartSchema.safeParse(cartItem);
-        
-        if (!validationResult.success) {
-            console.error('Invalid cart item structure:', validationResult.error);
-            const errorResponse: ErrorMessage = { error: 'Invalid cart item data' };
-            return res.status(500).send(errorResponse);
-        }
-
-        res.send(validationResult.data);
+        // TypeScript ser till att cartItem matchar CartItem interface
+        const responseItem: CartItem = cartItem;
+        res.send(responseItem);
 
     } catch (error) {
         console.error(error);
@@ -230,12 +230,6 @@ router.delete(
     }
   }
 );
-
-
-
-
-
-
 
 
 export default router;
