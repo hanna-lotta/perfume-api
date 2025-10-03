@@ -68,38 +68,35 @@ router.get('/:productId', async (req: Request<ProductIdParam>, res: Response<Pro
 })
 
 
-// POST
-router.post('/', async (req: Request , res: Response<Product | ErrorMessage>) => {
-	const validation = productsPostSchema.safeParse(req.body)
-	if (!validation.success) {
-		res.status(400).send({ error: 'Invalid request body'}) //Bad request
-		return
-	}
-  const productId: string = req.params.productId
-  if (!productId) {
-	res.status(400).send({error: 'productId is required'}) // Bad request
-  	return
-  }
+router.post('/', async (req: Request, res: Response<Product | ErrorMessage>) => {
+    const validation = productsPostSchema.safeParse(req.body)
+    if (!validation.success) {
+        res.status(400).send({ error: 'Invalid request body'}) //Bad request
+        return
+    }
   
+  
+  const productId: string = Date.now().toString() 
+
   const { name, price, img, amountInStock } = validation.data
   const newItem: Product = {
-	Pk: 'product',
-	Sk: `p#${productId}`,
-	name,
-	price,
-	img,
-	amountInStock
+    Pk: 'product',
+    Sk: `p#${productId}`,
+    name,
+    price,
+    img,
+    amountInStock
   }
   
   try {
-	await db.send(new PutCommand({
-		TableName: myTable,
-		Item: newItem
-	}))
-	res.status(201).send(newItem) // created
+    await db.send(new PutCommand({
+        TableName: myTable,
+        Item: newItem
+    }))
+    res.status(201).send(newItem) // created
   } catch (error) {
-	console.error('Error creating product:', error)
-	res.status(500).send({ error: 'Failed to create product' }) // Server error
+    console.error('Error creating product:', error)
+    res.status(500).send({ error: 'Failed to create product' }) // Server error
   }
 });
 
