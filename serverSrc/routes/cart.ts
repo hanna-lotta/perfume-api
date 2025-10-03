@@ -7,9 +7,8 @@ import type { CartItem, ErrorMessage } from '../data/types.js';
 
 const router = Router();
 
-
 // GET - Hämta alla cart objekt
-router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) => {
+router.get('/', async (req, res) => {
     try {
         console.log(myTable);
         
@@ -23,17 +22,10 @@ router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) =
 
         const data = await db.send(command);
 
-        // Validera varje item från DynamoDB med CartSchema
-        const validCartItems: CartItem[] = [];
-        
-        (data.Items || []).forEach(item => {
-            const validation = CartSchema.safeParse(item);
-            if (validation.success) {
-                validCartItems.push(validation.data);
-            }
-        });
+        // Filtrera och validera med isCartItem
+        const validCartItems: CartItem[] = data.Items?.filter((item: any): item is CartItem => isCartItem(item)) || [];
 
-        res.status(200).send(validCartItems);
+        res.status(200).json(validCartItems);
         
     } catch (error) {
         
