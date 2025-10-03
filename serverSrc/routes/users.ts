@@ -3,7 +3,7 @@ import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema, userSchema } from '../data/validation.js'
-import { User, ErrorMessage, UserRes, GetUsersRes } from "../data/types.js"
+import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam } from "../data/types.js"
 
 
 
@@ -41,15 +41,15 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 
 // GET /api/users/:id - get one user by id
-router.get('/:userId', async (req: Request<{ userId: string }>, res: Response<UserRes | ErrorMessage>) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
     try {
-      const userId = req.params.userId;
+      const newId = req.params.id;
 
       const result = await db.send(new GetCommand({
         TableName: myTable,
         Key: { 
           Pk: 'user', 
-          Sk: `user#${userId}` }
+          Sk: `user#${newId}` }
       }));
 
       if (!result.Item) return res.status(404).send({ error: 'User not found' });
@@ -79,11 +79,11 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
     const { username } = parsed.data
 
     // create id
-    const userId = Math.floor(Math.random()*100)
+    const newId = Math.floor(Math.random()*100)
 
     const newUser = {
           Pk: 'user',
-          Sk: `user#${userId}`,
+          Sk: `user#${newId}`,
           username,
     }
 
@@ -104,13 +104,16 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
 
 // PUT /api/users/:id - update user's name
 export interface UpdateUserResponse {
-  userId: string;
-  username: string;
+  user: User;
+  // user: {
+  //   id: string;
+  //   username: string;
+  // }
 }
-router.put('/:id', async (req: Request, res: Response<UpdateUserResponse | ErrorMessage>) => {
-  try {
-    const userId = req.params.id;
+router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserResponse | ErrorMessage>) => {
+    const id = req.params.id;
 
+  try {
     // NEW (comment fix): validate body must have { username }
     const parsed = userPostSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -123,7 +126,7 @@ router.put('/:id', async (req: Request, res: Response<UpdateUserResponse | Error
       TableName: myTable,
       Key: { 
         Pk: 'user',
-        Sk: `user#${userId}`
+        Sk: `user#${id}`
       },
       UpdateExpression: 'SET username = :username',
       // OLD: ExpressionAttributeNames was here but commented out
@@ -136,7 +139,14 @@ router.put('/:id', async (req: Request, res: Response<UpdateUserResponse | Error
 
     // NEW: keep response shape consistent with UpdateUserResponse
     const updatedUserName = String(result.Attributes?.username ?? username);
-    return res.status(200).json({ userId, username: updatedUserName });
+
+    const validated = userSchema.safeParse(result.Attributes);
+        if (!validated.success) {
+          return res.status(500).json({ error: 'Invalid user data in database' });
+        }
+
+        return res.status(200).json({ user: validated.data });
+
 
   } catch (err: unknown) {
     // OLD: checked err.username === 'ConditionalCheckFailedException' (wrong)
@@ -155,54 +165,10 @@ router.put('/:id', async (req: Request, res: Response<UpdateUserResponse | Error
   }
 })
 
-/*
-router.put('/:id', async (req: Request, res: Response) => {
-router.put('/:userId', async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-
-    // validate body: must have { name }
-    const parsed = userPostSchema.safeParse(req.body)
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues })
-    }
-    const { username } = parsed.data
-
-    // update name; fail if the user does not exist
-    const result = await db.send(new UpdateCommand({
-        TableName: myTable,
-        Key: { Pk: `user`,
-             Sk: `user#${userId}`
-            },        
-      UpdateExpression: 'SET username = :username',
-        ExpressionAttributeValues: { ':username': username },
-        ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
-        ReturnValues: 'ALL_NEW',
-
-
-    }));
-
-    const updatedUserName = String(result.Attributes?.username ?? username)
-    res.status(200).send({ userId, username: updatedUserName })
-  } catch (err: unknown) {
-    // if user doesn't exist - 404
-    if (
-      typeof err === 'object' &&
-      err &&
-      'username' in err &&
-      (err as { username?: string }).username === 'ConditionalCheckFailedException'
-    ) {
-      return res.status(404).send({ error: 'User not found' })
-    }
-    console.error(err)
-    res.status(500).send({ error: 'Failed to update user' })
-  }
-})
-*/
 
 // DELETE - Ta bort användare med id
-router.delete('/:userId', async (req: Request<{ userId: string }>, res: Response<UserRes | ErrorMessage>) => {
-    const userId = req.params.userId;
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
+    const userId = req.params.id;
 
     try {
       const deleteResult = await db.send(
