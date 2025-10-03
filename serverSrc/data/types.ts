@@ -49,3 +49,9 @@ export interface Cart {
   Sk: `product#${string}#user#${string}`
   amount: number
 }
+
+// NEW: PUT user - allow optional 'issues' for zod details
+export interface ErrorMessage {
+  error: string;
+  issues?: unknown; 
+}

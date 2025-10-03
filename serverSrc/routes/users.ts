@@ -103,6 +103,60 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
 })
 
 // PUT /api/users/:id - update user's name
+export interface UpdateUserResponse {
+  userId: string;
+  username: string;
+}
+router.put('/:id', async (req: Request, res: Response<UpdateUserResponse | ErrorMessage>) => {
+  try {
+    const userId = req.params.id;
+
+    // NEW (comment fix): validate body must have { username }
+    const parsed = userPostSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues });
+    }
+    const { username } = parsed.data;
+
+    // NEW: update username; fail if the user does not exist
+    const result = await db.send(new UpdateCommand({
+      TableName: myTable,
+      Key: { 
+        Pk: 'user',
+        Sk: `user#${userId}`
+      },
+      UpdateExpression: 'SET username = :username',
+      // OLD: ExpressionAttributeNames was here but commented out
+      // OLD: // ExpressionAttributeNames: { '#n': 'username' },
+      // NEW: remove ExpressionAttributeNames entirely (not needed)
+      ExpressionAttributeValues: { ':username': username },
+      ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
+      ReturnValues: 'ALL_NEW',
+    }))
+
+    // NEW: keep response shape consistent with UpdateUserResponse
+    const updatedUserName = String(result.Attributes?.username ?? username);
+    return res.status(200).json({ userId, username: updatedUserName });
+
+  } catch (err: unknown) {
+    // OLD: checked err.username === 'ConditionalCheckFailedException' (wrong)
+    // NEW: check err.name properly
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'name' in err &&
+      (err as { name?: string }).name === 'ConditionalCheckFailedException'
+    ) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to update user' });
+  }
+})
+
+/*
+router.put('/:id', async (req: Request, res: Response) => {
 router.put('/:userId', async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
@@ -144,7 +198,7 @@ router.put('/:userId', async (req: Request, res: Response) => {
     res.status(500).send({ error: 'Failed to update user' })
   }
 })
-
+*/
 
 // DELETE - Ta bort användare med id
 router.delete('/:userId', async (req: Request<{ userId: string }>, res: Response<UserRes | ErrorMessage>) => {
