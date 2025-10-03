@@ -57,6 +57,17 @@ export const NewCartSchema = z.object({
   amount: z.number().int().min(1).max(10),
 })
 
+
+export const userSchema = z.object ({
+	Pk: z.literal('user'),    // Pk ska vara product
+	Sk: z.string().regex(/^user#\d+$/).transform(val => val as `user#${string}`), 
+	username: z.string().min(1).max(50),    
+})
+
+
+export type User = z.infer<typeof userSchema>
+
+
 export const userPostSchema = z.object ({
 	username: z.string().min(1).max(50)
 })

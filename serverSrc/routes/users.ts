@@ -2,13 +2,15 @@ import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
-import { userPostSchema } from '../data/validation.js'
-import { User, ErrorMessage } from "../data/types.js"
+import { userPostSchema, userSchema } from '../data/validation.js'
+import { User, ErrorMessage, UserRes, GetUsersRes } from "../data/types.js"
+
+
 
 const router: Router = express.Router()
 
 // GET /api/users - get all users from DynamoDB
-router.get('/', async (req: Request, res: Response<User[] | ErrorMessage>) =>  { 
+router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) =>  { 
   try {
     // query-kommandot
     const command = new QueryCommand({
@@ -29,74 +31,75 @@ router.get('/', async (req: Request, res: Response<User[] | ErrorMessage>) =>  {
       username: String(item.username),
     }));
 
-    
-    res.status(200).json(users); // Returnerar listan med produkter
+    // Returnerar listan med produkter
+    res.status(200).send({ users }); // Lägger users i ett objekt 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch user" });
+    res.status(500).send({ error: "Failed to fetch user" });
   }
 });
 
 
 // GET /api/users/:id - get one user by id
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
     try {
+      const userId = req.params.id;
 
-    const userId = req.params.id
+      const result = await db.send(new GetCommand({
+        TableName: myTable,
+        Key: { 
+          Pk: 'user', 
+          Sk: `user#${userId}` }
+      }));
 
-    let getCommand = new GetCommand({
-      TableName: myTable,
-      Key: {
-        Pk: 'user',
-        Sk: `user#${userId}`	  	
+      if (!result.Item) return res.status(404).json({ error: 'User not found' });
+
+      const validated = userSchema.safeParse(result.Item);
+      if (!validated.success) {
+        return res.status(500).json({ error: 'Invalid user data in database' });
       }
-    })
 
-    const result = await db.send(getCommand)
-    const item = result.Item
-    if (item) {
-      res.status(200).json(item)
-    } else {
-      res.status(404).json({ error: 'user not found'})
+      res.status(200).json({ user: validated.data });
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to fetch user' });
     }
-
-  } catch (err) {
-       console.error(err)
-      res.status(500).json({ error: 'Failed to fetch user' })
-  }
-})
+});
 
 
 // POST /api/users - create a new user { name }
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => {
   try {
     // validate body
     const parsed = userPostSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues })
+      return res.status(400).send({ error: 'Invalid body' })
     }
     const { username } = parsed.data
 
     // create id
-    const id = Math.floor(Math.random()*100)
+    const userId = Math.floor(Math.random()*100)
+
+    const newUser = {
+          Pk: 'user',
+          Sk: `user#${userId}`,
+          username,
+    }
 
     // Save user (overwrite allowed if same key is reused)
-    await db.send(
-      new PutCommand({
+    await db.send(new PutCommand({
         TableName: myTable,
-        Item: {
-          Pk: 'user',
-          Sk: `user#${id}`,
-          username,
-        },
-      })
-    )
+        Item: newUser,
+      }))
 
-  res.status(201).json({ id, username })
-  } catch (err: unknown) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
+      const validated = userSchema.parse(newUser)
+      res.status(201).send({ user: validated })
+
+    } catch (err) {
+      console.error(err)
+      res.status(500).send({ error: 'Failed to create user' })
+    }
 })
 
 // PUT /api/users/:id - update user's name
@@ -126,7 +129,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     }));
 
     const updatedUserName = String(result.Attributes?.username ?? username)
-    res.status(200).json({ userId, username: updatedUserName })
+    res.status(200).send({ userId, username: updatedUserName })
   } catch (err: unknown) {
     // if user doesn't exist - 404
     if (
@@ -135,16 +138,16 @@ router.put('/:id', async (req: Request, res: Response) => {
       'username' in err &&
       (err as { username?: string }).username === 'ConditionalCheckFailedException'
     ) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).send({ error: 'User not found' })
     }
     console.error(err)
-    res.status(500).json({ error: 'Failed to update user' })
+    res.status(500).send({ error: 'Failed to update user' })
   }
 })
 
 
 // DELETE - Ta bort användare med id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response<{ message: string } | ErrorMessage>) => {
    const userId = req.params.id;
 
   try {
@@ -158,16 +161,16 @@ router.delete('/:id', async (req, res) => {
 
       }));
 
-   res.status(200).json({ message: `User ${userId} deleted successfully` });
+   res.status(200).send({ message: `User ${userId} deleted successfully` });
 
 } catch (error: any) { 
     console.error(error);
 
     if (error.name === 'ConditionalCheckFailedException') {
-      return res.status(404).json({ error: `User ${userId} not found` });
+      return res.status(404).send({ error: `User ${userId} not found` });
     }
 
-    res.status(500).json({ error: `Could not delete user ${userId}` });
+    res.status(500).send({ error: `Could not delete user ${userId}` });
 }
 });
 

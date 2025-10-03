@@ -15,7 +15,8 @@ export interface Product {
 }
 
 export interface ErrorMessage {
-	error: string
+	error: string;
+	issuess?: unknown;
 }
 
 export interface CartItem {
@@ -29,7 +30,15 @@ export interface CartItem {
 export interface User {
   Pk: 'user'
   Sk: `user#${string}`
-  username: string
+  username: string;
+}
+
+export interface UserRes {
+  user: User;
+}
+
+export interface GetUsersRes {
+	users: User[];
 }
 
 export interface Cart {
