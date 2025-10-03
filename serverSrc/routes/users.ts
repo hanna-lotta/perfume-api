@@ -41,9 +41,9 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 
 // GET /api/users/:id - get one user by id
-router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
+router.get('/:userId', async (req: Request<{ userId: string }>, res: Response<UserRes | ErrorMessage>) => {
     try {
-      const userId = req.params.id;
+      const userId = req.params.userId;
 
       const result = await db.send(new GetCommand({
         TableName: myTable,
@@ -56,14 +56,14 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | 
 
       const validated = userSchema.safeParse(result.Item);
       if (!validated.success) {
-        return res.status(500).json({ error: 'Invalid user data in database' });
+        return res.status(500).send({ error: 'Invalid user data in database' });
       }
 
-      res.status(200).json({ user: validated.data });
+      res.status(200).send({ user: validated.data });
 
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to fetch user' });
+      res.status(500).send({ error: 'Failed to fetch user' });
     }
 });
 
@@ -103,9 +103,9 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
 })
 
 // PUT /api/users/:id - update user's name
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:userId', async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.userId;
 
     // validate body: must have { name }
     const parsed = userPostSchema.safeParse(req.body)
@@ -147,31 +147,34 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 
 // DELETE - Ta bort användare med id
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response<{ message: string } | ErrorMessage>) => {
-   const userId = req.params.id;
+router.delete('/:userId', async (req: Request<{ userId: string }>, res: Response<UserRes | ErrorMessage>) => {
+    const userId = req.params.userId;
 
-  try {
-    // console.log('DELETE pk=',  `user#${userId}`)
-    await db.send(new DeleteCommand({
-      TableName: myTable, 
-      Key: { Pk: `user`,
-             Sk: `user#${userId}`
-      },
-      ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
+    try {
+      const deleteResult = await db.send(
+        new DeleteCommand({
+          TableName: myTable,
+          Key: { Pk: 'user', Sk: `user#${userId}` },
+          ReturnValues: 'ALL_OLD',
+        })
+      );
 
-      }));
-
-   res.status(200).send({ message: `User ${userId} deleted successfully` });
-
-} catch (error: any) { 
-    console.error(error);
-
-    if (error.name === 'ConditionalCheckFailedException') {
-      return res.status(404).send({ error: `User ${userId} not found` });
+      if (deleteResult.Attributes) {
+        // validera användaren som togs bort
+        const validated = userSchema.safeParse(deleteResult.Attributes);
+        if (validated.success) {
+          return res.status(200).send({ user: validated.data });
+        } else {
+          return res.status(500).send({ error: 'Database validation failed' });
+        }
+      } else {
+        return res.status(404).send({ error: `User ${userId} not found` });
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      return res.status(500).send({ error: `Could not delete user ${userId}` });
     }
 
-    res.status(500).send({ error: `Could not delete user ${userId}` });
-}
 });
 
 export default router

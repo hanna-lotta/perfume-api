@@ -16,7 +16,6 @@ export interface Product {
 
 export interface ErrorMessage {
 	error: string;
-	issuess?: unknown;
 }
 
 export interface CartItem {
@@ -31,6 +30,10 @@ export interface User {
   Pk: 'user'
   Sk: `user#${string}`
   username: string;
+}
+
+export interface UserIdParam {
+	userId: string;
 }
 
 export interface UserRes {
