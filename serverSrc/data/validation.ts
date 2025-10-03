@@ -61,3 +61,8 @@ export const userPostSchema = z.object ({
 
 
 
+export const CartDeleteParamsSchema = z.object({
+  userId: NewCartSchema.shape.userId,
+  productId: NewCartSchema.shape.productId,
+});
+export type CartDeleteParamsInput = z.infer<typeof CartDeleteParamsSchema>;
