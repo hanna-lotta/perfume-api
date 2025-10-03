@@ -15,7 +15,7 @@ export interface Product {
 }
 
 export interface ErrorMessage {
-	error: string
+	error: string;
 }
 
 export interface CartItem {
@@ -29,11 +29,29 @@ export interface CartItem {
 export interface User {
   Pk: 'user'
   Sk: `user#${string}`
-  username: string
+  username: string;
+}
+
+export interface UserIdParam {
+	userId: string;
+}
+
+export interface UserRes {
+  user: User;
+}
+
+export interface GetUsersRes {
+	users: User[];
 }
 
 export interface Cart {
   Pk: 'cart'
   Sk: `product#${string}#user#${string}`
   amount: number
+}
+
+// NEW: PUT user - allow optional 'issues' for zod details
+export interface ErrorMessage {
+  error: string;
+  issues?: unknown; 
 }
