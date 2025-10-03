@@ -2,16 +2,18 @@ import * as z from "zod"
 
 
 export const CartSchema = z.object({
-  userId: z.string().min(1).max(50),
+  userId: z.string().min(5).max(10),
   productId: z.string().regex(/^p\d+$/), 
-  amount: z.number().int().min(1).max(10),
+  amount: z.number().int().min(1).max(20),
   Pk: z.literal('cart'),
   Sk: z.string().regex(/^product#p\d+#user#.+$/)
 })
 
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
-	Sk: z.string().regex(/^p#[0-9]+$/).transform(val => val as `p#${string}`), // Sk ska vara p# + string
+	Sk: z.custom<`p#${string}`>((val) => 
+		typeof val === 'string' && /^p#[0-9]+$/.test(val)
+	), // Sk ska vara p# + nummer
 	name: z.string().min(1).max(30),     //Max 30 bokstäver
 	price: z.number().gte(1).lte(1000000), // Max 1 miljon
 	img: z.string().max(300).refine(
@@ -72,3 +74,8 @@ export const userPostSchema = z.object ({
 
 
 
+export const CartDeleteParamsSchema = z.object({
+  userId: NewCartSchema.shape.userId,
+  productId: NewCartSchema.shape.productId,
+});
+export type CartDeleteParamsInput = z.infer<typeof CartDeleteParamsSchema>;
