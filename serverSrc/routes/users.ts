@@ -2,8 +2,10 @@ import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
-import { userPostSchema } from '../data/validation.js'
+import { userPostSchema, userSchema } from '../data/validation.js'
 import { User, ErrorMessage, UserRes, GetUsersRes } from "../data/types.js"
+
+
 
 const router: Router = express.Router()
 
@@ -39,10 +41,10 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 
 // GET /api/users/:id - get one user by id
-router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
-     const userId = req.params.id
+router.get('/:id', async (req: Request, res: Response) => {
     try {
 
+    const userId = req.params.id
 
     let getCommand = new GetCommand({
       TableName: myTable,
@@ -53,20 +55,18 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
     })
 
     const result = await db.send(getCommand)
-    const item:  User | undefined;
-
+    const item = result.Item
     if (item) {
-      res.status(200).send(item)
+      res.status(200).json(item)
     } else {
-      res.status(404).send({ error: 'user not found'})
+      res.status(404).json({ error: 'user not found'})
     }
 
   } catch (err) {
        console.error(err)
-      res.status(500).send({ error: 'Failed to fetch user' })
+      res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
-	
 
 
 // POST /api/users - create a new user { name }
@@ -75,7 +75,7 @@ router.post('/', async (req: Request, res: Response) => {
     // validate body
     const parsed = userPostSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).send({ error: 'Invalid body', issues: parsed.error.issues })
+      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues })
     }
     const { username } = parsed.data
 
@@ -94,10 +94,10 @@ router.post('/', async (req: Request, res: Response) => {
       })
     )
 
-  res.status(201).send({ id, username })
+  res.status(201).json({ id, username })
   } catch (err: unknown) {
     console.error(err)
-    res.status(500).send({ error: 'Failed to create user' })
+    res.status(500).json({ error: 'Failed to create user' })
   }
 })
 
@@ -109,7 +109,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     // validate body: must have { name }
     const parsed = userPostSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).send({ error: 'Invalid body', issues: parsed.error.issues })
+      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues })
     }
     const { username } = parsed.data
 
@@ -129,7 +129,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     }));
 
     const updatedUserName = String(result.Attributes?.username ?? username)
-    res.status(200).send({ userId, username: updatedUserName })
+    res.status(200).json({ userId, username: updatedUserName })
   } catch (err: unknown) {
     // if user doesn't exist - 404
     if (
@@ -138,10 +138,10 @@ router.put('/:id', async (req: Request, res: Response) => {
       'username' in err &&
       (err as { username?: string }).username === 'ConditionalCheckFailedException'
     ) {
-      return res.status(404).send({ error: 'User not found' })
+      return res.status(404).json({ error: 'User not found' })
     }
     console.error(err)
-    res.status(500).send({ error: 'Failed to update user' })
+    res.status(500).json({ error: 'Failed to update user' })
   }
 })
 
