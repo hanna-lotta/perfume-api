@@ -79,7 +79,7 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
     const { username } = parsed.data
 
     // create id
-    const newId = Math.floor(Math.random()*100)
+    const newId: string = (Math.floor(Math.random()* 100) + 1).toString()
 
     const newUser = {
           Pk: 'user',
@@ -99,7 +99,7 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
     } catch (err) {
       console.error(err)
       res.status(500).send({ error: 'Failed to create user' })
-    }
+    } 
 })
 
 // PUT /api/users/:id - update user's name
@@ -117,7 +117,7 @@ router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserRe
     // NEW (comment fix): validate body must have { username }
     const parsed = userPostSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues });
+      return res.status(400).send({ error: 'Invalid body', issues: parsed.error.issues });
     }
     const { username } = parsed.data;
 
@@ -142,10 +142,10 @@ router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserRe
 
     const validated = userSchema.safeParse(result.Attributes);
         if (!validated.success) {
-          return res.status(500).json({ error: 'Invalid user data in database' });
+          return res.status(500).send({ error: 'Invalid user data in database' });
         }
 
-        return res.status(200).json({ user: validated.data });
+        return res.status(200).send({ user: validated.data });
 
 
   } catch (err: unknown) {
@@ -157,11 +157,11 @@ router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserRe
       'name' in err &&
       (err as { name?: string }).name === 'ConditionalCheckFailedException'
     ) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).send({ error: 'User not found' });
     }
 
     console.error(err);
-    return res.status(500).json({ error: 'Failed to update user' });
+    return res.status(500).send({ error: 'Failed to update user' });
   }
 })
 
