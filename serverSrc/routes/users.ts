@@ -1,6 +1,5 @@
-import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
-import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
+import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema, userSchema } from '../data/validation.js'
 import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam } from "../data/types.js"
