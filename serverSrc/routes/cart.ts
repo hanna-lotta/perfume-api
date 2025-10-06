@@ -202,7 +202,7 @@ router.delete(
     if (!parsed.success) {
       return res.status(400).send({ error: 'Invalid userId or productId' });
     }
-    const { productId, userId } = parsed.data;
+    const { productId, userId } = parsed.data;//On success, Zod gives you a typed, safe object
 
     // 2) Build PK/SK based on your current model + CartSchema.Sk regex
     //    Sk must look like: product#p<digits>#user#<userId>
@@ -215,7 +215,8 @@ router.delete(
         TableName: myTable,
         Key: { Pk: pk, Sk: sk },
         ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
-      });
+      });//Only delete if the item actually exists
+      // If it doesn’t exist, DynamoDB throws ConditionalCheckFailedException.
 
       await db.send(deleteCommand);
 
