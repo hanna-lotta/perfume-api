@@ -1,11 +1,13 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { CartItem } from "../types"
 
 const CartPage = () => {
 	const [isCartItem, SetIsCartItem] = useState(false)
 	const [cartItem, SetCartItem] = useState<CartItem[]>([]) 
 
-	
+	useEffect(() => {
+        handleGetCartItems('user1')
+    }, [])
 
 	const handleGetCartItems = async (userId: string = 'user1') => {
 		try {
@@ -57,9 +59,6 @@ const CartPage = () => {
 	  return (
 		<div>
 		  <h1>Cart Page</h1>
-		  <button onClick={() => handleGetCartItems('user1')} className="load-cart-btn">
-			Ladda mina cart items
-		  </button>
 		  <div className="cart-frame">
 			{isCartItem ? (
 				<div>
