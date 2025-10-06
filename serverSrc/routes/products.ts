@@ -29,18 +29,13 @@ router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) =>
     const validProducts: Product[] = [];
     (data.Items || []).forEach(item => {
       const parsed = ProductSchema.safeParse(item);
-      if (parsed.success) validProducts.push(parsed.data);
-      else console.warn("Invalid product in DB:", item);
+      if (parsed.success) validProducts.push(parsed.data); // Lägger till giltiga produkter
+      else console.warn("Invalid product in DB:", item); // Loggar ogiltiga produkter
     });
 
-    // Returnera 404 om inga giltiga produkter har hittats
-    if (validProducts.length === 0) {
-      return res.status(404).send({ error: 'Product not found' });
-    }
-
-    res.status(200).send(validProducts); // Returnerar listan med produkter
+    res.status(200).send(validProducts); 
   } catch (error) {
-    console.error(error);
+    console.error(error); //Loggar felen i servern
     // Felmeddelande
     res.status(500).send({ error: "Failed to fetch products" });
   }
