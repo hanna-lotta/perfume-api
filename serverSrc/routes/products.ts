@@ -58,7 +58,7 @@ router.get('/:productId', async (req: Request<ProductIdParam>, res: Response<Pro
 			}
 		})
 		const result: GetResult = await db.send(getCommand)
-		const item: Product | undefined | ErrorMessage = result.Item
+		const item: Product | undefined | ErrorMessage = result.Item //"Item" = En rad/post i tabellen (som en produkt)(AWS terminologi)
 		if (item) {
 			res.status(200).send(item) // OK
 		} else {
@@ -78,9 +78,9 @@ router.post('/', async (req: Request, res: Response<Product | ErrorMessage>) => 
         return
     }
   
-  
-  const productId: string = Date.now().toString() 
+  const productId: string = Date.now().toString() //Nuvarande timestamp i millisekunder
 
+  //Tar ut fälten från den validerade datan.
   const { name, price, img, amountInStock } = validation.data
   const newItem: Product = {
     Pk: 'product',
@@ -98,7 +98,6 @@ router.post('/', async (req: Request, res: Response<Product | ErrorMessage>) => 
     }))
     res.status(201).send(newItem) // created
   } catch (error) {
-    console.error('Error creating product:', error)
     res.status(500).send({ error: 'Failed to create product' }) // Server error
   }
 });
@@ -182,7 +181,7 @@ router.delete('/:productId', async (req: Request<ProductIdParam> , res: Response
 			ReturnValues: 'ALL_OLD'
 		}))
 		
-		if (deleteResult.Attributes) {   //Attributes - Alla fält som begärdes - ur returnvalues 'ALL_OLD' (AWS terminologi)
+		if (deleteResult.Attributes) {   //validerar den radera datan. Attributes - Alla fält som begärdes - ur returnvalues 'ALL_OLD' (AWS terminologi)
 			const validation = ProductSchema.safeParse(deleteResult.Attributes)
 			if (validation.success) {
 				const deletedProduct = validation.data
