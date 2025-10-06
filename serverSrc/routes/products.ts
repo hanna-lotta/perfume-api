@@ -12,33 +12,33 @@ const router: Router = express.Router();
 
 // GET - Hämtar alla produkter från DynamoDB
 router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) => { 
-	try {
-		// query command för att hämta alla items med Pk
-		const command = new QueryCommand({
-			TableName: myTable, // Tabellen i DynamoDB
-			KeyConditionExpression: "Pk = :pk", // Filtrerar partition key
-			ExpressionAttributeValues: {
-				":pk": "product"
-			}
-		});
-		
-		// Fråga DynamoDB efter alla items och får result
-		const data = await db.send(command);
-		
-		// Validera varje item mot ProductSchema
-		const validProducts: Product[] = [];
-		(data.Items || []).forEach(item => {
-			const parsed = ProductSchema.safeParse(item);
-			if (parsed.success) validProducts.push(parsed.data);
-			else console.warn("Invalid product in DB:", item);
-		});
-		
-		res.status(200).send(validProducts); // Returnerar listan med produkter
-	} catch (error) {
-		console.error(error);
-		// Felmeddelande
-		res.status(500).send({ error: "Failed to fetch products" });
-	}
+  try {
+    // query command för att hämta alla items med Pk
+    const command = new QueryCommand({
+      TableName: myTable, // Tabellen i DynamoDB
+      KeyConditionExpression: "Pk = :pk", // Filtrerar partition key
+      ExpressionAttributeValues: {
+        ":pk": "product"
+      }
+    });
+
+    // Fråga DynamoDB efter alla items och får result
+    const data = await db.send(command);
+
+    // Validera varje item mot ProductSchema
+    const validProducts: Product[] = [];
+    (data.Items || []).forEach(item => {
+      const parsed = ProductSchema.safeParse(item);
+      if (parsed.success) validProducts.push(parsed.data); // Lägger till giltiga produkter
+      else console.warn("Invalid product in DB:", item); // Loggar ogiltiga produkter
+    });
+
+    res.status(200).send(validProducts); 
+  } catch (error) {
+    console.error(error); //Loggar felen i servern
+    // Felmeddelande
+    res.status(500).send({ error: "Failed to fetch products" });
+  }
 });
 
 router.get('/:productId', async (req: Request<ProductIdParam>, res: Response<Product | ErrorMessage>) => {
