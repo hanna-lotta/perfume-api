@@ -25,17 +25,16 @@ router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) =>
     // Fråga DynamoDB efter alla items och får result
     const data = await db.send(command);
 
-    // Mappa varje item för att kolla så att de är rätt datatyper
-    const products: Product[] = (data.Items ?? []).map((item) => ({
-        Pk: item.Pk,
-        Sk: item.Sk,
-        name: String(item.name),
-        price: Number(item.price),
-        img: String(item.img),
-        amountInStock: Number(item.amountInStock),
-    }))
+    // Validera varje item mot ProductSchema
+    const validProducts: Product[] = [];
+    (data.Items || []).forEach(item => {
+      const parsed = ProductSchema.safeParse(item);
+      if (parsed.success) validProducts.push(parsed.data);
+      else console.warn("Invalid product in DB:", item);
+    });
 
-    res.status(200).send(products); // Returnerar listan med produkter
+
+    res.status(200).send(validProducts); // Returnerar listan med produkter
   } catch (error) {
     console.error(error);
     // Felmeddelande

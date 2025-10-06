@@ -25,12 +25,15 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 
     // Mappa varje item för att kolla så att de är rätt datatyper
-    const users: User[] = (data.Items ?? []).map((item) => ({
-      Pk: item.Pk,
-      Sk: item.Sk,
-      username: String(item.username),
-    }));
-
+    const users: User[] = [];
+    for (const item of data.Items ?? []) {
+      const parsed = userSchema.safeParse(item);
+      if (parsed.success) {
+        users.push(parsed.data);
+      } else {
+        console.warn("Invalid user in DB:", item);
+      }
+    }
     // Returnerar listan med produkter
     res.status(200).send({ users }); // Lägger users i ett objekt 
   } catch (error) {
