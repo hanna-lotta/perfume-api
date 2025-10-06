@@ -33,11 +33,6 @@ router.get("/", async (req: Request, res: Response<Product[] | ErrorMessage>) =>
       else console.warn("Invalid product in DB:", item);
     });
 
-    // Returnera 404 om inga giltiga produkter har hittats
-    if (validProducts.length === 0) {
-      return res.status(404).send({ error: 'Product not found' });
-    }
-
     res.status(200).send(validProducts); // Returnerar listan med produkter
   } catch (error) {
     console.error(error);
