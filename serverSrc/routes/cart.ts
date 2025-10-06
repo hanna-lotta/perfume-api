@@ -1,5 +1,5 @@
 import { Router, Response, Request } from 'express';
-import { QueryCommand, UpdateCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { NewCartSchema, CartSchema,CartDeleteParamsSchema} from '../data/validation.js';

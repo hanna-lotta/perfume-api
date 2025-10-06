@@ -12,7 +12,7 @@ export const CartSchema = z.object({
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
 	Sk: z.custom<`p#${string}`>((val) => 
-		typeof val === 'string' && /^p#[0-9]+$/.test(val)
+		typeof val === 'string' && /^p#[0-9]+$/.test(val) //kollar att värdet är en sträng &&(båda sanna) testar om strängen matchar regex
 	), // Sk ska vara p# + nummer
 	name: z.string().min(1).max(30),     //Max 30 bokstäver
 	price: z.number().gte(1).lte(1000000), // Max 1 miljon
