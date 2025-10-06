@@ -13,6 +13,12 @@ export interface Product {
 	img: string,
 	amountInStock: number
 }
+export interface ProductBody {
+	name: string,
+	price: number,
+	img: string,
+	amountInStock: number
+}
 
 export interface ErrorMessage {
 	error: string;
@@ -21,6 +27,12 @@ export interface ErrorMessage {
 export interface CartItem {
 	Pk: 'cart',
 	Sk: string,
+	userId: string,
+	productId: string, 
+	amount: number
+}
+
+export interface CartItemBody {
 	userId: string,
 	productId: string, 
 	amount: number
@@ -38,6 +50,10 @@ export interface UserIdParam {
 
 export interface PutUserParam {
 	id: string;
+}
+
+export interface UserBody {
+	username: string;
 }
 
 export interface UserRes {

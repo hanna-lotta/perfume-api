@@ -3,7 +3,7 @@ import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
 import { userPostSchema, userSchema } from '../data/validation.js'
-import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam } from "../data/types.js"
+import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam, UserBody, UserIdParam } from "../data/types.js"
 
 const router: Router = express.Router()
 
@@ -42,13 +42,13 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 });
 
 
-// GET /api/users/:id - Hämta en användare med ID
+// GET /api/users/:userId - Hämta en användare med ID
 // Get one user by id
-router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
+router.get('/:userId', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
     try {
       // Validerar Id från url parametern med hjälp av zod
       // använder safeparse för att garanetar rätt datatyp från DB
-      const idParsed = z.string().min(1).safeParse(req.params.id)
+      const idParsed = z.string().min(1).safeParse(req.params.userId)
        if (!idParsed.success) return res.status(400).send({ error: 'Invalid id' })
 
       const newId = idParsed.data; // Hämtar de validerade id
@@ -79,7 +79,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | 
 
 
 // POST /api/users - create a new user { name }
-router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => {
+router.post('/', async (req: Request<UserBody>, res: Response<UserRes | ErrorMessage>) => {
   try {
     // validate body
     // Validerar request body med hjälp av zod
@@ -92,7 +92,7 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
     // create id
     // Skapar nytt id (medveten om att de är risk för krock) 
     // använd UUID vid publicering
-    const newId: string = (Math.floor(Math.random()* 100) + 1).toString()
+    const newId: string = (Math.floor(Math.random()* 1000000) + 1).toString()
 
     // Skapar de nya user objektet
     const newUser = {
@@ -100,7 +100,7 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
           Sk: `user#${newId}`,
           username,
     }
-
+	const validated = userSchema.parse(newUser)
     // Save user (overwrite allowed if same key is reused)
     // Sparar user i DB
     // Putcommand skrivs lver om samma key redan finns
@@ -110,7 +110,6 @@ router.post('/', async (req: Request, res: Response<UserRes | ErrorMessage>) => 
       }))
 
       // Validerar user objektet innan vi skickar tillbaka
-      const validated = userSchema.parse(newUser)
       res.status(201).send({ user: validated }) // User har skapats
 
     } catch (err) {
@@ -125,7 +124,7 @@ export interface UpdateUserResponse {
   user: User;
 }
 // PUT /api/users/:id - update user's name
-router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserResponse | ErrorMessage>) => {
+router.put('/:id', async (req: Request<PutUserParam, {}, UserBody>, res: Response<UpdateUserResponse | ErrorMessage>) => {
 
   try {
     // Validerar id
@@ -184,12 +183,12 @@ router.put('/:id', async (req: Request<PutUserParam>, res: Response<UpdateUserRe
 
 
 // DELETE - Ta bort användare med id
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response<UserRes | ErrorMessage>) => {
-    const userId = req.params.id;
+router.delete('/:userId', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
+    const userId = req.params.userId;
 
     try {
       //  validerar id
-      const idParsed = z.string().min(1).safeParse(req.params.id)
+      const idParsed = z.string().min(1).safeParse(req.params.userId)
       if (!idParsed.success) return res.status(400).send({ error: 'Invalid id' })
       const parsedId = idParsed.data;
 

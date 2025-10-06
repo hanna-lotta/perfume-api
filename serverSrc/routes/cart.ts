@@ -3,7 +3,7 @@ import { QueryCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { NewCartSchema, CartSchema,CartDeleteParamsSchema} from '../data/validation.js';
-import type { CartItem, ErrorMessage } from '../data/types.js';
+import type { Cart, CartItem, CartItemBody, ErrorMessage } from '../data/types.js';
 
 const router = Router();
 
@@ -91,7 +91,7 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
 });
 
 // POST - skapa nytt cart item
-router.post('/', async (req: Request, res: Response<CartItem | ErrorMessage>) => {
+router.post('/', async (req: Request<CartItemBody>, res: Response<CartItem | ErrorMessage>) => {
 
         // Valdiera data från NewCartSchema (userId, productId, amount) 
         const validation = NewCartSchema.safeParse((req.body));
@@ -154,7 +154,7 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(400).send(errorResponse);
         }
 
-        // Skapa komplett cart item för upsert
+        // Om cart item finns, uppd. antal.
         const cartItem: CartItem = {
             Pk: 'cart',
             Sk: `product#${productId}#user#${userId}`,
@@ -168,10 +168,7 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             Item: cartItem,
             ReturnValues: 'ALL_OLD'
         }));
-
-        // TypeScript ser till att cartItem matchar CartItem interface
-        const responseItem: CartItem = cartItem;
-        res.send(responseItem);
+        res.send(cartItem);
 
     } catch (error) {
         console.error(error);
@@ -188,6 +185,10 @@ interface CartDeleteParams {
   userId: string;
 }
 
+interface Message {
+  message: string;
+}
+
 /**
  * DELETE - remove one product from one user's cart
  * Example calls:
@@ -196,7 +197,7 @@ interface CartDeleteParams {
  */
 router.delete(
   '/:productId/user/:userId',
-  async (req: Request<CartDeleteParams>, res: Response<{ message: string } | ErrorMessage>) => {
+  async (req: Request<CartDeleteParams>, res: Response<Message | ErrorMessage>) => {
     // 1) Validate params with Zod (reused from NewCartSchema)
     const parsed = CartDeleteParamsSchema.safeParse(req.params);
     if (!parsed.success) {
