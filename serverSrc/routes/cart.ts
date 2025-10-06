@@ -1,5 +1,5 @@
 import { Router, Response, Request } from 'express';
-import { QueryCommand, UpdateCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { NewCartSchema, CartSchema,CartDeleteParamsSchema} from '../data/validation.js';
@@ -71,8 +71,11 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             const validation = CartSchema.safeParse(item);
             if (validation.success && validation.data.Sk.includes(`#user#${userId}`)) {
                 validatedItems.push(validation.data);
+            } else if (validation.success) {                
+            
+            
             } else {
-                console.log('Validation failed for item:', item);
+                console.log('Validation failed for item:', item, validation);
                 if (validation.error) {
                     console.log('Validation errors:', validation.error.issues);
                 }

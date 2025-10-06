@@ -18,24 +18,24 @@ API endpoints
 
 PRODUCTS
 -GET /api/products/ - all products 
--GET /api/products/productId- get specific product 
--POST /api/products/productId - create new product
--PUT /api/products/productId - update product 
--DELETE /api/products/productId -remove product
+-GET /api/products/:productId- get specific product 
+-POST /api/products/ - create new product
+-PUT /api/products/:productId - update product 
+-DELETE /api/products/:productId -remove product
 
 CART
 -GET /api/cart/ - get all cart items
--GET /api/cart/user/userId - get specific cart for sepecific user
+-GET /api/cart/user/:userId - get specific cart for sepecific user
 -POST /api/cart/ - create new cart item
--PUT /api/cart/productId/user/userId - update cart amount 
--DELETE /api/cart -remove in cart
+-PUT /api/cart/:productId/user/:userId - update cart amount 
+-DELETE /api/cart/productId/user/:userId -remove specific product from users cart
 
 USER:
 -GET /api/users/ - all users
--GET /api/users/userId - specific user
+-GET /api/users/:id - specific user
 -POST /api/users/ - create user  
--PUT /api/users/userId -update username
--DELETE /api/users/userId - remove user
+-PUT /api/users/:id -update username
+-DELETE /api/users/:id - remove user
 
 An example :
 ```
