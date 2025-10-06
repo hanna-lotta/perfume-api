@@ -64,6 +64,7 @@ export const userSchema = z.object ({
 	username: z.string().min(1).max(50),    
 })
 
+export const userIdSchema = z.string().min(1).regex(/^user#?\d*$/);
 
 export type User = z.infer<typeof userSchema>
 
