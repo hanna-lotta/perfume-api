@@ -1,3 +1,4 @@
+import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
