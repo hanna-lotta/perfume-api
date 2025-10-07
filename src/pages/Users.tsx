@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-const User = () => {
+const Users = () => {
   const [users, setUsers] = useState<{ Sk: string; username: string }[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -46,17 +46,6 @@ const User = () => {
   )
 }
 
-export default User
+export default Users
 
-/*
-const User = () => {
-	  return (
-		<div>
-		  <h1>User Page</h1>
-		</div>
-	  )
-	}
-	  
-	export default User
-*/
 
