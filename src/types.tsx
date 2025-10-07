@@ -8,3 +8,10 @@ export interface Product {
 	img: string,
 	amountInStock: number
 }
+export interface CartItem {
+	Pk: 'cart',
+	Sk: string,
+	userId: string,
+	productId: string, 
+	amount: number
+}

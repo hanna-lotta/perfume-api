@@ -1,28 +1,19 @@
 import * as z from "zod"
-import type { CartItem, ErrorMessage } from './types.js'
 
 
-const CartSchema = z.object({
- 
-  userId: z.string().min(1).max(50),
+export const CartSchema = z.object({
+  userId: z.string().min(5).max(10),
   productId: z.string().regex(/^p\d+$/), 
-  amount: z.number().int().min(1).max(10),
+  amount: z.number().int().min(1).max(20),
+  Pk: z.literal('cart'),
+  Sk: z.string().regex(/^product#p\d+#user#.+$/)
 })
-
-function isCartItem(item: CartItem | undefined): item is CartItem {
-
-	try {
-		let result = CartSchema.parse(item)
-		return true
-	} catch {
-		return false
-	}
-}
-
 
 export const ProductSchema = z.object({
 	Pk: z.literal('product'),    // Pk ska vara product
-	Sk: z.string().regex(/^p[0-9]+$/), // Sk ska vara p + nr
+	Sk: z.custom<`p#${string}`>((val) => 
+		typeof val === 'string' && /^p#[0-9]+$/.test(val) //kollar att värdet är en sträng &&(båda sanna) testar om strängen matchar regex
+	), // Sk ska vara p# + nummer
 	name: z.string().min(1).max(30),     //Max 30 bokstäver
 	price: z.number().gte(1).lte(1000000), // Max 1 miljon
 	img: z.string().max(300).refine(
@@ -60,4 +51,35 @@ export const ProductSchema = z.object({
 	amountInStock: z.number().int().gte(0)
 })
 
-export { isCartItem}
+export const NewCartSchema = z.object({
+  userId: z.string().min(5).max(8),
+  productId: z.string().regex(/^p\d+$/), 
+  amount: z.number().int().min(1).max(10),
+})
+
+
+export const userSchema = z.object ({
+	Pk: z.literal('user'),    // Pk ska vara product
+	Sk: z.string().regex(/^user#\d+$/).transform(val => val as `user#${string}`), 
+	username: z.string().min(1).max(50),    
+})
+
+export const userIdSchema = z.string().min(1).regex(/^user#?\d*$/);
+
+export type User = z.infer<typeof userSchema>
+
+
+export const userPostSchema = z.object ({
+	username: z.string().min(1).max(50)
+})
+
+export const validateId = (id: string) => {
+  return z.string().min(1, "Id is required").safeParse(id);
+};
+
+
+export const CartDeleteParamsSchema = z.object({
+  userId: NewCartSchema.shape.userId,
+  productId: NewCartSchema.shape.productId,
+});
+export type CartDeleteParamsInput = z.infer<typeof CartDeleteParamsSchema>;
