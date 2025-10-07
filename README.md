@@ -1,3 +1,4 @@
+```
 -Perfume API
 
 This is a smaller API for perfumes with React frontend.
@@ -38,7 +39,7 @@ USER:
 -DELETE /api/users/:id - remove user
 
 An example :
-```
+
 PUT http://localhost:1444/api/cart/p123/user/user1
 
 body: {"amount": 3}
