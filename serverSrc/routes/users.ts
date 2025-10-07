@@ -2,10 +2,12 @@ import * as z from "zod"
 import express, { type Request, type Response, type Router } from 'express'
 import { QueryCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb'
 import db, { myTable } from '../data/dynamodb.js'
-import { userPostSchema, userSchema } from '../data/validation.js'
-import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam, UserBody, UserIdParam } from "../data/types.js"
+import { userPostSchema, userSchema, validateId } from '../data/validation.js'
+import { User, ErrorMessage, UserRes, GetUsersRes, PutUserParam, UserIdParam, UserBody } from "../data/types.js"
+
 
 const router: Router = express.Router()
+
 
 // GET /api/users - get all users from DynamoDB
 router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) =>  { 
@@ -44,11 +46,11 @@ router.get('/', async (req: Request, res: Response<GetUsersRes | ErrorMessage>) 
 
 // GET /api/users/:userId - Hämta en användare med ID
 // Get one user by id
-router.get('/:userId', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
+router.get('/:id', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
     try {
       // Validerar Id från url parametern med hjälp av zod
       // använder safeparse för att garanetar rätt datatyp från DB
-      const idParsed = z.string().min(1).safeParse(req.params.userId)
+      const idParsed = validateId(req.params.id)
        if (!idParsed.success) return res.status(400).send({ error: 'Invalid id' })
 
       const newId = idParsed.data; // Hämtar de validerade id
@@ -128,7 +130,7 @@ router.put('/:id', async (req: Request<PutUserParam, {}, UserBody>, res: Respons
 
   try {
     // Validerar id
-    const idParsed = z.string().min(1).safeParse(req.params.id)
+    const idParsed = validateId(req.params.id)
     if (!idParsed.success) return res.status(400).send({ error: 'Invalid id' })
    
     const id = idParsed.data;
@@ -164,31 +166,21 @@ router.put('/:id', async (req: Request<PutUserParam, {}, UserBody>, res: Respons
         return res.status(200).send({ user: validated.data }); // Returnerar uppdaterad user
 
 
-  } catch (err: unknown) {
-    // Hanterar DB's specifika error när objektet inte finns
-    // NEW: check err.name properly
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      'name' in err &&
-      (err as { name?: string }).name === 'ConditionalCheckFailedException'
-    ) {
-      return res.status(404).send({ error: 'User not found' });
-    }
-
-    console.error(err);
-    return res.status(500).send({ error: 'Failed to update user' });
+    } catch (err) { // Fångar fel
+    console.error(err) // Loggar felen i konsolen
+    return res.status(500).send({ error: 'Failed to update user' }) // Serverfel
   }
 })
 
 
 // DELETE - Ta bort användare med id
-router.delete('/:userId', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
-    const userId = req.params.userId;
+
+router.delete('/:id', async (req: Request<UserIdParam>, res: Response<UserRes | ErrorMessage>) => {
+    const userId = req.params.id;
 
     try {
       //  validerar id
-      const idParsed = z.string().min(1).safeParse(req.params.userId)
+      const idParsed = validateId(req.params.id)
       if (!idParsed.success) return res.status(400).send({ error: 'Invalid id' })
       const parsedId = idParsed.data;
 

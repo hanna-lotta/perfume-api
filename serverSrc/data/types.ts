@@ -52,6 +52,10 @@ export interface PutUserParam {
 	id: string;
 }
 
+export interface UserIdParam {
+	id: string;
+}
+
 export interface UserBody {
 	username: string;
 }

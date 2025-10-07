@@ -73,6 +73,9 @@ export const userPostSchema = z.object ({
 	username: z.string().min(1).max(50)
 })
 
+export const validateId = (id: string) => {
+  return z.string().min(1, "Id is required").safeParse(id);
+};
 
 
 export const CartDeleteParamsSchema = z.object({

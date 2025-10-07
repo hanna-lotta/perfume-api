@@ -185,16 +185,12 @@ interface CartDeleteParams {
   userId: string;
 }
 
+
 interface Message {
   message: string;
 }
 
-/**
- * DELETE - remove one product from one user's cart
- * Example calls:
- *   DELETE /api/cart/p1/user/user1
- *   DELETE /api/cart/p5/user/user2
- */
+
 router.delete(
   '/:productId/user/:userId',
   async (req: Request<CartDeleteParams>, res: Response<Message | ErrorMessage>) => {
@@ -203,30 +199,25 @@ router.delete(
     if (!parsed.success) {
       return res.status(400).send({ error: 'Invalid userId or productId' });
     }
-    const { productId, userId } = parsed.data;//On success, Zod gives you a typed, safe object
+    const { productId, userId } = parsed.data;
 
-    // 2) Build PK/SK based on your current model + CartSchema.Sk regex
-    //    Sk must look like: product#p<digits>#user#<userId>
+    // Sk : product#p<digits>#user#<userId>
     const pk = 'cart';
     const sk = `product#${productId}#user#${userId}`;
 
     try {
-      // 3) Delete with a condition so we return 404 for non-existing items
       const deleteCommand = new DeleteCommand({
         TableName: myTable,
         Key: { Pk: pk, Sk: sk },
         ConditionExpression: 'attribute_exists(Pk) AND attribute_exists(Sk)',
-      });//Only delete if the item actually exists
-      // If it doesn’t exist, DynamoDB throws ConditionalCheckFailedException.
+      });
 
       await db.send(deleteCommand);
 
-      // 4) Success
       return res.status(200).send({
         message: `Product ${productId} removed from cart for user ${userId}`,
       });
     } catch (error: any) {
-      // If the item didn't exist, DynamoDB throws ConditionalCheckFailedException
       if (error?.name === 'ConditionalCheckFailedException') {
         return res.status(404).send({ error: 'Cart item not found' });
       }
