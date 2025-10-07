@@ -5,7 +5,7 @@ import App from './App.tsx'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import Home from './pages/Home.tsx'
 import Cart from './pages/CartPage.tsx'
-import User from './pages/User.tsx'
+import Users from './pages/Users.tsx'
 
 const router = createHashRouter([
   {
@@ -21,8 +21,8 @@ const router = createHashRouter([
 			Component: Cart
 		},
 		{
-			path: '/user',
-			Component: User
+			path: '/users',
+			Component: Users
 		}
 	]
 }

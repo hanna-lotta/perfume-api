@@ -14,7 +14,7 @@ function App() {
 		<nav className="links">
 			<NavLink to="/">Produkter</NavLink>
 			<NavLink to="/cart">Kundvagn</NavLink>
-			<NavLink to="/user">Användare</NavLink>
+			<NavLink to="/users">Användare</NavLink>
 		</nav>
 	</header>
 	<main>
