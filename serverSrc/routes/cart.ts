@@ -3,15 +3,13 @@ import { QueryCommand, PutCommand,DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import db from '../data/dynamodb.js';
 import { myTable } from '../data/dynamodb.js';
 import { NewCartSchema, CartSchema,CartDeleteParamsSchema} from '../data/validation.js';
-import type { Cart, CartItem, CartItemBody, ErrorMessage } from '../data/types.js';
+import type { CartItem, CartItemBody, ErrorMessage } from '../data/types.js';
 
 const router = Router();
 
 // GET - Hämta alla cart objekt
 router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) => {
     try {
-        console.log(myTable);
-        
         const command = new QueryCommand({
             TableName: myTable,
             KeyConditionExpression: 'Pk = :pk',
@@ -22,7 +20,6 @@ router.get('/', async (req: Request, res: Response<CartItem[] | ErrorMessage>) =
 
         const data = await db.send(command);
 
-        // Validera varje item från DynamoDB med CartSchema
         const validCartItems: CartItem[] = [];
         
         (data.Items || []).forEach(item => {
@@ -50,7 +47,6 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
     try {
         const userId = req.params.userId;
         
-        // Validera userId parameter med NewCartSchema userId regler
         const userIdValidation = NewCartSchema.shape.userId.safeParse(userId);
         if (!userIdValidation.success) {
             return res.status(400).send({ error: 'Invalid userId format' });
@@ -64,7 +60,6 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             }
         }));
 
-        // Validera och filtrera i samma steg - helt typsäkert
         const validatedItems: CartItem[] = [];
         
         (result.Items || []).forEach(item => {
@@ -75,14 +70,12 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
             
             
             } else {
-                console.log('Validation failed for item:', item, validation);
                 if (validation.error) {
                     console.log('Validation errors:', validation.error.issues);
                 }
             }
         });
         
-        console.log(`After validation: ${validatedItems.length} valid items`);
         res.send(validatedItems);
 
     } catch(error) {
@@ -93,41 +86,33 @@ router.get('/user/:userId', async (req: Request<UserIdParam>, res: Response<Cart
 // POST - skapa nytt cart item
 router.post('/', async (req: Request<CartItemBody>, res: Response<CartItem | ErrorMessage>) => {
 
-        // Valdiera data från NewCartSchema (userId, productId, amount) 
         const validation = NewCartSchema.safeParse((req.body));
 
-        // Om valideringen misslyckas returnera bad request (400)
         if (!validation.success)
             return res.status(400).send({ error: "Invalid cart item" });
 
-        // Plocka ut specifik data från validerad request
         const { userId, productId, amount } = validation.data;
 
-         // Skapar ett nytt objekt (cart item) som ska sparas i databasen
         const newCartItem: CartItem = {
-            Pk: "cart", // Används för att gruppera alla cart items
-            Sk: `product#${productId}#user#${userId}`, // Gör varje rad unik med kombinationen produkt o användare
-            userId, // Används för att enkelt kunna filtrera cart items med användare
-            productId, // Används för att identifiera produkten (unikt produkt id)
-            amount // Antalet produkter som är tillagt
+            Pk: "cart", 
+            Sk: `product#${productId}#user#${userId}`, 
+            userId, 
+            productId, 
+            amount 
         };
 
     try {
-        // Lägger till cart item i DynamoDB
         await db.send(new PutCommand({
             TableName: myTable,
             Item: newCartItem
         }));
-        // Returnera 201 när det har skapats
         res.status(201).send(newCartItem);
     } catch (error) {
-        console.error(error);
-        // Fångar olika fel som t.ex dålig nätevrks anslutning
         res.status(500).send({ error: "Could not add to cart" });
     }
 })
 
-interface CartUpdateParams {
+interface CartParams {
 	productId: string;
 	userId: string;
 }
@@ -137,7 +122,7 @@ interface PutBody {
 }
 
 //uppdatera amount i cart
-router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {}, PutBody>, res: Response<CartItem | ErrorMessage>) => {
+router.put('/:productId/user/:userId', async (req: Request<CartParams, {}, PutBody>, res: Response<CartItem | ErrorMessage>) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;
@@ -154,7 +139,6 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
             return res.status(400).send(errorResponse);
         }
 
-        // Om cart item finns, uppd. antal.
         const cartItem: CartItem = {
             Pk: 'cart',
             Sk: `product#${productId}#user#${userId}`,
@@ -171,19 +155,11 @@ router.put('/:productId/user/:userId', async (req: Request<CartUpdateParams, {},
         res.send(cartItem);
 
     } catch (error) {
-        console.error(error);
         const errorResponse: ErrorMessage = { error: 'Server error' };
         res.status(500).send(errorResponse);
     }           
 })
 
-
-
-/** Params interface for DELETE /api/cart/:productId/user/:userId */
-interface CartDeleteParams {
-  productId: string;
-  userId: string;
-}
 
 
 interface Message {
@@ -193,15 +169,13 @@ interface Message {
 
 router.delete(
   '/:productId/user/:userId',
-  async (req: Request<CartDeleteParams>, res: Response<Message | ErrorMessage>) => {
-    // 1) Validate params with Zod (reused from NewCartSchema)
+  async (req: Request<CartParams>, res: Response<Message | ErrorMessage>) => {
     const parsed = CartDeleteParamsSchema.safeParse(req.params);
     if (!parsed.success) {
       return res.status(400).send({ error: 'Invalid userId or productId' });
     }
     const { productId, userId } = parsed.data;
 
-    // Sk : product#p<digits>#user#<userId>
     const pk = 'cart';
     const sk = `product#${productId}#user#${userId}`;
 
@@ -221,7 +195,6 @@ router.delete(
       if (error?.name === 'ConditionalCheckFailedException') {
         return res.status(404).send({ error: 'Cart item not found' });
       }
-      console.error('DELETE /api/cart error:', error);
       return res.status(500).send({ error: 'Internal server error' });
     }
   }
